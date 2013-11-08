@@ -1,0 +1,24 @@
+arenas:
+  description: 'Help relating to arenas'
+  messages:
+    - '&e/bg arena list &6&o- List arenas'
+    - '&e/bg arena info <arena> &6&o- Get info on arena'
+    - '&e/bg arena create &6&o- Create an arena'
+    - '&e/bg arena modify <arena ID> <setting> <new value> &6&o- Modify an arena''s configuration'
+  modification:
+    description: 'Modifying arena settings'
+    messages:
+      - '&cWIP'
+game:
+  description: 'Help relating to games'
+  commands:
+    description: 'Help related to game commands'
+    messages:
+    - '&e/bg game guess <guess> &6&o- Makea  guess in the current round of a game you''re in.'
+    - '&e/bg game idea <word/phrase> &6&o- Think of something for players to build.'
+    - '&e/bg game leave &6&o- Leave your current game.'
+    - '&e/bg game join <arena ID> &6&o- Join a game.'
+debug:
+  description: 'Debug commands for development purposes of the plugin'
+  messages:
+    - '&e/bg debug genroom [amount] &6&o- Generate a new room in the room world'
