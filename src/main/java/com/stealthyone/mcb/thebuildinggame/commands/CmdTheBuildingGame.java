@@ -25,6 +25,8 @@ import com.stealthyone.mcb.thebuildinggame.TheBuildingGame.Log;
 import com.stealthyone.mcb.thebuildinggame.backend.GameBackend;
 import com.stealthyone.mcb.thebuildinggame.backend.arenas.Arena;
 import com.stealthyone.mcb.thebuildinggame.backend.arenas.exceptions.InvalidArenaException;
+import com.stealthyone.mcb.thebuildinggame.backend.arenas.exceptions.PlayersInArenaException;
+import com.stealthyone.mcb.thebuildinggame.backend.arenas.rooms.Room;
 import com.stealthyone.mcb.thebuildinggame.backend.games.GameInstance;
 import com.stealthyone.mcb.thebuildinggame.backend.games.GameState;
 import com.stealthyone.mcb.thebuildinggame.backend.games.rounds.*;
@@ -38,6 +40,9 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.List;
+import java.util.Map.Entry;
 
 public class CmdTheBuildingGame implements CommandExecutor {
 
@@ -63,6 +68,7 @@ public class CmdTheBuildingGame implements CommandExecutor {
 
                 /* Base help command */
                 case "help":
+                    plugin.getHelpManager().handleHelpCommand(sender, null, label, args, 1);
                     break;
 
                 /* Base game commands */
@@ -70,12 +76,16 @@ public class CmdTheBuildingGame implements CommandExecutor {
                     cmdGame(sender, command, label, args);
                     return true;
 
+                /* Reload plugin config command */
+                case "reload":
+                    cmdReload(sender, command, label, args);
+                    return true;
+
                 default:
-                    ErrorMessage.UNKNOWN_COMMAND.sendTo(sender);
+                    ErrorMessage.UNKNOWN_COMMAND.sendTo(sender, label);
                     break;
             }
         }
-        plugin.getHelpManager().handleHelpCommand(sender, null, label, args, 1);
         return true;
     }
 
@@ -122,10 +132,10 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 /* Arena help */
                 case "help":
                     plugin.getHelpManager().handleHelpCommand(sender, "arenas", label, args, 2);
-                    break;
+                    return;
 
                 default:
-                    ErrorMessage.UNKNOWN_COMMAND.sendTo(sender);
+                    ErrorMessage.UNKNOWN_COMMAND.sendTo(sender, label + " arena");
                     break;
             }
         }
@@ -154,12 +164,12 @@ public class CmdTheBuildingGame implements CommandExecutor {
             } else {
                 try {
                     if (arena.setEnabled(false)) {
-                        NoticeMessage.ARENA_ENABLED.sendTo(sender, Integer.toString(arenaId));
+                        NoticeMessage.ARENA_DISABLED.sendTo(sender, Integer.toString(arenaId));
                     } else {
                         ErrorMessage.ARENA_ALREADY_DISABLED.sendTo(sender, Integer.toString(arenaId));
                     }
-                } catch (InvalidArenaException ex) {
-                    ErrorMessage.ARENA_INVALID_CONFIGURATION.sendTo(sender, Integer.toString(arenaId), Integer.toString(arenaId));
+                } catch (PlayersInArenaException ex) {
+                    ErrorMessage.PLAYERS_IN_ARENA.sendTo(sender);
                 }
             }
         }
@@ -301,17 +311,52 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 return;
             }
 
-            switch (args[3]) {
+            Arena arena = plugin.getGameBackend().getArenaManager().getArena(arenaId);
+            if (arena == null) {
+                ErrorMessage.ARENA_DOES_NOT_EXIST.sendTo(sender);
+                return;
+            } else if (arena.isEnabled()) {
+                ErrorMessage.ARENA_MUST_BE_DISABLED.sendTo(sender);
+                return;
+            }
+
+            String option = args[3];
+            String value = ArrayUtils.stringArrayToString(args, 4);
+
+            switch (option) {
                 case "maxplayers":
-                    sender.sendMessage("-maxplayers-");
+                    int newCount;
+                    try {
+                        newCount = Integer.parseInt(value);
+                    } catch (NumberFormatException ex) {
+                        ErrorMessage.MUST_BE_INT.sendTo(sender, "Max player count");
+                        return;
+                    }
+                    if (!arena.setMaxPlayers(newCount)) {
+                        ErrorMessage.INVALID_PLAYER_COUNT.sendTo(sender);
+                    } else {
+                        NoticeMessage.ARENA_SET_MAXPLAYERS.sendTo(sender, Integer.toString(arenaId), Integer.toString(newCount));
+                    }
                     return;
 
                 case "roundtime":
-                    sender.sendMessage("-roundtime-");
+                    int newTime;
+                    try {
+                        newTime = Integer.parseInt(value);
+                    } catch (NumberFormatException ex) {
+                        ErrorMessage.MUST_BE_INT.sendTo(sender, "Max player count");
+                        return;
+                    }
+                    if (newTime < 30) {
+                        ErrorMessage.INVALID_ROUND_TIME.sendTo(sender);
+                    } else {
+                        arena.setRoundTime(newTime);
+                        NoticeMessage.ARENA_SET_ROUNDTIME.sendTo(sender, Integer.toString(arenaId), TimeUtils.translateSeconds(newTime));
+                    }
                     return;
 
                 default:
-                    sender.sendMessage("-unknown setting-");
+                    ErrorMessage.UNKNOWN_ARENA_SETTING.sendTo(sender, option);
                     break;
             }
         }
@@ -328,16 +373,23 @@ public class CmdTheBuildingGame implements CommandExecutor {
     private void cmdDebug(CommandSender sender, Command command, String label, String[] args) {
         if (!PermissionNode.DEV_DEBUG.isAllowed(sender)) {
             ErrorMessage.NO_PERMISSION.sendTo(sender);
-            return;
         } else if (args.length > 1) {
             switch (args[1]) {
                 /* Generate room */
                 case "genroom":
                     cmdDebug_Genroom(sender, command, label, args);
                     return;
+
+                case "help":
+                    plugin.getHelpManager().handleHelpCommand(sender, "debug", label, args, 2);
+                    return;
+
+                default:
+                    ErrorMessage.UNKNOWN_COMMAND.sendTo(sender, label + " debug");
+                    break;
             }
+            plugin.getHelpManager().handleHelpCommand(sender, "debug", label, args, 1);
         }
-        plugin.getHelpManager().handleHelpCommand(sender, "debug", label, args, 2);
     }
 
     /*
@@ -365,33 +417,54 @@ public class CmdTheBuildingGame implements CommandExecutor {
      * @param args
      */
     private void cmdGame(CommandSender sender, Command command, String label, String[] args) {
-        switch (args[1]) {
-            /* Guess command */
-            case "guess":
-                cmdGame_Guess(sender, command, label, args);
-                return;
+        if (args.length > 1) {
+            switch (args[1]) {
+                /* Guess command */
+                case "guess":
+                    cmdGame_Guess(sender, command, label, args);
+                    return;
 
-            /* Idea command */
-            case "idea":
-                cmdGame_Idea(sender, command, label, args);
-                return;
+                /* Idea command */
+                case "idea":
+                    cmdGame_Idea(sender, command, label, args);
+                    return;
 
-            /* Join game command */
-            case "join":
-                cmdGame_Join(sender, command, label, args);
-                return;
+                /* Join game command */
+                case "join":
+                    cmdGame_Join(sender, command, label, args);
+                    return;
 
-            /* Leave game command */
-            case "leave":
-                cmdGame_Leave(sender, command, label, args);
-                return;
+                /* Leave game command */
+                case "leave":
+                    cmdGame_Leave(sender, command, label, args);
+                    return;
 
-            /* Game ready command */
-            case "ready":
-                cmdGame_Ready(sender, command, label, args);
-                return;
+                /* Game ready command */
+                case "ready":
+                    cmdGame_Ready(sender, command, label, args);
+                    return;
+
+                /* Game results command */
+                case "results":
+                    cmdGame_Results(sender, command, label, args);
+                    return;
+
+                /* Game room command */
+                case "room":
+                    cmdGame_Room(sender, command, label, args);
+                    return;
+
+                /* Game help command */
+                case "help":
+                    plugin.getHelpManager().handleHelpCommand(sender, "game", label, args, 2);
+                    return;
+
+                default:
+                    ErrorMessage.UNKNOWN_COMMAND.sendTo(sender, label + " game");
+                    return;
+            }
         }
-        plugin.getHelpManager().handleHelpCommand(sender, "game", label, args, 2);
+        plugin.getHelpManager().handleHelpCommand(sender, "game", label, args, 1);
     }
 
     /*
@@ -414,9 +487,10 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 Round round = game.getCurrentRound();
                 if (!(round instanceof RoundGuess)) {
                     ErrorMessage.NOT_GUESSING_ROUND.sendTo(sender);
-                } else {
-                    ((RoundGuess) round).submitGuess(player, guess);
+                } else if (((RoundGuess) round).submitGuess(player, guess)) {
                     NoticeMessage.SUBMITTED_GUESS.sendTo(sender, guess);
+                } else {
+                    ErrorMessage.GUESS_ALREADY_SUBMITTED.sendTo(sender);
                 }
             }
         }
@@ -442,9 +516,10 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 Round round = game.getCurrentRound();
                 if (!(round instanceof RoundThink)) {
                     ErrorMessage.NOT_GUESSING_ROUND.sendTo(sender);
-                } else {
-                    ((RoundThink) round).submitIdea(player, idea);
+                } else if (((RoundThink) round).submitIdea(player, idea)) {
                     NoticeMessage.SUBMITTED_IDEA.sendTo(sender, idea);
+                } else {
+                    ErrorMessage.IDEA_ALREADY_SUBMITTED.sendTo(sender);
                 }
             }
         }
@@ -534,6 +609,114 @@ public class CmdTheBuildingGame implements CommandExecutor {
                     ErrorMessage.ALREADY_MARKED_READY.sendTo(sender);
                 }
             }
+        }
+    }
+
+    /*
+     * Game results command
+     */
+    private void cmdGame_Results(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            ErrorMessage.MUST_BE_PLAYER.sendTo(sender);
+        } else if (!PermissionNode.GAME_PLAY.isAllowed(sender)) {
+            ErrorMessage.NO_PERMISSION.sendTo(sender);
+        } else {
+            BgPlayer player = plugin.getGameBackend().getPlayerManager().castPlayer((Player) sender);
+            GameInstance game = player.getCurrentGame();
+            if (game == null) {
+                ErrorMessage.NOT_IN_ANY_GAME.sendTo(sender);
+            } else {
+                Round round = game.getCurrentRound();
+                if (!(round instanceof RoundResults)) {
+                    ErrorMessage.NOT_RESULTS_ROUND.sendTo(sender);
+                } else if (args.length < 3) {
+                    UsageMessage.GAME_RESULTS.sendTo(sender, label);
+                    StringBuilder message = new StringBuilder();
+                    List<BgPlayer> resultNumbers = ((RoundResults) round).getResultNumbers();
+                    for (int i = 0; i < resultNumbers.size(); i++) {
+                        if (message.length() != 0) message.append(ChatColor.DARK_GRAY + ", ");
+                        message.append(ChatColor.GREEN + Integer.toString(i + 1) + ". " + ChatColor.GOLD + resultNumbers.get(i).getName());
+                    }
+                    sender.sendMessage(message.toString());
+                } else {
+                    int resultNum;
+                    try {
+                        resultNum = Integer.parseInt(args[2]) - 1;
+                    } catch (NumberFormatException ex) {
+                        ErrorMessage.MUST_BE_INT.sendTo(sender, "Result number");
+                        return;
+                    }
+
+                    Entry<BgPlayer, List<String>> results;
+                    try {
+                        results = ((RoundResults) round).getResults(resultNum);
+                    } catch (IndexOutOfBoundsException ex) {
+                        ErrorMessage.INVALID_RESULT_NUMBER.sendTo(sender);
+                        return;
+                    }
+
+                    sender.sendMessage(ChatColor.DARK_GRAY + "=====" + ChatColor.GREEN + "Results: " + ChatColor.GOLD + results.getKey().getName() + ChatColor.DARK_GRAY + "=====");
+                    for (String message : results.getValue()) sender.sendMessage(message);
+                }
+            }
+        }
+    }
+
+    /*
+     * Game room teleport command
+     */
+    private void cmdGame_Room(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            ErrorMessage.MUST_BE_PLAYER.sendTo(sender);
+        } else if (!PermissionNode.GAME_PLAY.isAllowed(sender)) {
+            ErrorMessage.NO_PERMISSION.sendTo(sender);
+        } else {
+            BgPlayer player = plugin.getGameBackend().getPlayerManager().castPlayer((Player) sender);
+            GameInstance game = player.getCurrentGame();
+            if (game == null) {
+                ErrorMessage.NOT_IN_ANY_GAME.sendTo(sender);
+            } else {
+                Round round = game.getCurrentRound();
+                if (!(round instanceof RoundResults)) {
+                    ErrorMessage.NOT_RESULTS_ROUND.sendTo(sender);
+                } else if (args.length < 3) {
+                    UsageMessage.GAME_ROOM.sendTo(sender, label);
+                } else {
+                    int roomNum;
+                    try {
+                        roomNum = Integer.parseInt(args[2]);
+                    } catch (NumberFormatException ex) {
+                        ErrorMessage.MUST_BE_INT.sendTo(sender, "Room number");
+                        return;
+                    }
+
+                    Room room;
+                    try {
+                        room = ((RoundResults) round).getRoomNumbers().get(roomNum - 1);
+                    } catch (IndexOutOfBoundsException ex) {
+                        ErrorMessage.INVALID_ROOM.sendTo(sender);
+                        return;
+                    }
+
+                    room.teleportPlayer(player);
+                }
+            }
+        }
+    }
+
+    /**
+     * Handler for reload command
+     * @param sender
+     * @param command
+     * @param label
+     * @param args
+     */
+    private void cmdReload(CommandSender sender, Command command, String label, String[] args) {
+        if (!PermissionNode.ADMIN_RELOAD.isAllowed(sender)) {
+            ErrorMessage.NO_PERMISSION.sendTo(sender);
+        } else {
+            plugin.reloadConfig();
+            NoticeMessage.PLUGIN_RELOADED.sendTo(sender);
         }
     }
 

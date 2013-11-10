@@ -37,30 +37,39 @@ public class RoundBuild extends Round {
 
     @Override
     public void sendStartingMessage() {
-        int playerCount = gameInstance.getPlayerCount();
         gameInstance.sendMessage(NoticeMessage.START_MESSAGE_BUILD);
         for (BgPlayer player : gameInstance.getPlayerIds().values()) {
-            Player rawPlayer = player.getPlayer();
-            int playerId = gameInstance.getIdByPlayer(player);
-            if (playerId == -1) {
-                rawPlayer.sendMessage(ChatColor.RED + "ERROR");
-                return;
-            }
-            int nextId = playerId + 1;
-            while (nextId > playerCount) nextId -= playerCount;
-
-            String idea;
-            Round prevRound = gameInstance.getRound(roundNum - 1);
-            if (prevRound instanceof RoundThink) {
-                idea = ((RoundThink) prevRound).getIdea(gameInstance.getPlayerById(nextId));
-            } else if (prevRound instanceof RoundGuess) {
-                idea = ((RoundGuess) prevRound).getGuess(gameInstance.getPlayerById(nextId));
-            } else {
-                rawPlayer.sendMessage(ChatColor.RED + "ERROR");
-                return;
-            }
-            NoticeMessage.BUILD_NOTICE.sendTo(player.getPlayer(), idea);
+            NoticeMessage.BUILD_NOTICE.sendTo(player.getPlayer(), getIdea(player));
         }
+    }
+
+    public BgPlayer getLastIdeaPlayer(BgPlayer player) {
+        int playerCount = gameInstance.getPlayerCount();
+        Player rawPlayer = player.getPlayer();
+        int playerId = gameInstance.getIdByPlayer(player);
+        if (playerId == -1) {
+            rawPlayer.sendMessage(ChatColor.RED + "ERROR");
+            return null;
+        }
+        int nextId = playerId + 1;
+        while (nextId > playerCount) nextId -= playerCount;
+        return gameInstance.getPlayerById(nextId);
+    }
+
+    public String getIdea(BgPlayer player) {
+        BgPlayer lastPlayer = getLastIdeaPlayer(player);
+        if (lastPlayer == null) return null;
+        String idea;
+        Round prevRound = gameInstance.getRound(roundNum - 1);
+        if (prevRound instanceof RoundThink) {
+            idea = ((RoundThink) prevRound).getIdea(lastPlayer);
+        } else if (prevRound instanceof RoundGuess) {
+            idea = ((RoundGuess) prevRound).getGuess(lastPlayer);
+        } else {
+            player.getPlayer().sendMessage(ChatColor.RED + "ERROR");
+            return null;
+        }
+        return idea;
     }
 
     public boolean setComplete(BgPlayer player) {
@@ -80,6 +89,14 @@ public class RoundBuild extends Round {
 
     public boolean allPlayersComplete() {
         return completedPlayers.size() == gameInstance.getPlayerCount();
+    }
+
+    @Override
+    public void endRound() {
+        RoundResults resultsRound = (RoundResults) gameInstance.getRound(gameInstance.getPlayerCount() + 1);
+        for (BgPlayer player : gameInstance.getPlayerIds().values()) {
+            resultsRound.addResult(getLastIdeaPlayer(player), NoticeMessage.RESULTS_BUILD.getMessage(player.getName(), getIdea(player), Integer.toString(resultsRound.getRoomNumber(getRoom(player)))));
+        }
     }
 
 }

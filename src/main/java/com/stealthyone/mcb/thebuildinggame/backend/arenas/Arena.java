@@ -20,6 +20,7 @@ package com.stealthyone.mcb.thebuildinggame.backend.arenas;
 
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
 import com.stealthyone.mcb.thebuildinggame.backend.arenas.exceptions.InvalidArenaException;
+import com.stealthyone.mcb.thebuildinggame.backend.arenas.exceptions.PlayersInArenaException;
 import com.stealthyone.mcb.thebuildinggame.backend.games.GameInstance;
 import com.stealthyone.mcb.thebuildinggame.backend.games.GameState;
 import org.bukkit.configuration.ConfigurationSection;
@@ -52,8 +53,13 @@ public class Arena {
         return config.getInt("maxPlayers");
     }
 
-    public void setMaxPlayers(int newValue) {
-        config.set("maxPlayers", newValue);
+    public boolean setMaxPlayers(int newValue) {
+        if (newValue >= 3 && newValue % 2 != 0) {
+            config.set("maxPlayers", newValue);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public int getRoundTime() {
@@ -70,7 +76,13 @@ public class Arena {
 
     public boolean setEnabled(boolean newValue) {
         if (isEnabled() != newValue) {
-            if (newValue && !checkConfiguration()) throw new InvalidArenaException();
+            if (newValue && !checkConfiguration()) {
+                throw new InvalidArenaException();
+            } else if (!newValue) {
+                if (gameInstance.getPlayerCount() > 0) {
+                    throw new PlayersInArenaException();
+                }
+            }
             config.set("enabled", newValue);
             gameInstance.setState(newValue ? GameState.WAITING : GameState.INACTIVE);
             return true;

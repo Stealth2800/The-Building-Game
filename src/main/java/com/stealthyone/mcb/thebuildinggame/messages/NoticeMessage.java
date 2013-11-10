@@ -29,6 +29,9 @@ public enum NoticeMessage implements IMessagePath {
     ARENA_DISABLED,
     ARENA_ENABLED,
 
+    ARENA_SET_MAXPLAYERS,
+    ARENA_SET_ROUNDTIME,
+
     BUILD_NOTICE,
 
     CREATED_ARENA,
@@ -55,6 +58,10 @@ public enum NoticeMessage implements IMessagePath {
     START_MESSAGE_RESULTS,
     START_MESSAGE_BUILD,
     START_MESSAGE_GUESS,
+
+    RESULTS_BUILD,
+    RESULTS_GUESS,
+    RESULTS_THINK,
 
     PLAYER_READY_NOTICE,
 

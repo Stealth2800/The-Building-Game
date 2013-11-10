@@ -18,8 +18,10 @@
  */
 package com.stealthyone.mcb.thebuildinggame.backend.games.rounds;
 
+import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame.Log;
 import com.stealthyone.mcb.thebuildinggame.backend.arenas.rooms.Room;
+import com.stealthyone.mcb.thebuildinggame.backend.arenas.rooms.RoomManager;
 import com.stealthyone.mcb.thebuildinggame.backend.games.GameInstance;
 import com.stealthyone.mcb.thebuildinggame.backend.players.BgPlayer;
 import com.stealthyone.mcb.thebuildinggame.messages.NoticeMessage;
@@ -50,12 +52,21 @@ public abstract class Round {
         Map<Integer, BgPlayer> players = gameInstance.getPlayerIds();
         int playerCount = players.size();
         List<Room> rooms = gameInstance.getRooms(this);
+        RoomManager roomManager = TheBuildingGame.getInstance().getGameBackend().getRoomManager();
         for (int i = 1; i <= playerCount; i++) {
             Log.debug("allocation, i: " + i);
             int roomNum = (i + roundNum) - 1;
             while (roomNum > playerCount) roomNum -= playerCount;
-            roomAllocation.put(players.get(i), rooms.get(roomNum - 1));
+            BgPlayer player = players.get(i);
+            Room room = rooms.get(roomNum - 1);
+            room.setInUse(true);
+            roomManager.setRoomRegionOwner(room.getX(), room.getZ(), player);
+            roomAllocation.put(player, room);
         }
+    }
+
+    public Room getRoom(BgPlayer player) {
+        return roomAllocation.get(player);
     }
 
     public void teleportPlayers() {
@@ -66,17 +77,21 @@ public abstract class Round {
         }
     }
 
-    public void clearRooms() {
+    public void cleanup() {
+        RoomManager roomManager = TheBuildingGame.getInstance().getGameBackend().getRoomManager();
         for (Room room : roomAllocation.values()) {
             room.setInUse(false);
+            roomManager.setRoomRegionOwner(room.getX(), room.getZ(), null);
         }
         roomAllocation.clear();
     }
 
     public void sendReadyMessage(int readyCount) {
-        gameInstance.sendMessage(NoticeMessage.PLAYER_READY_NOTICE, Integer.toString(readyCount), readyCount == 1 ? "" : "s");
+        gameInstance.sendMessage(NoticeMessage.PLAYER_READY_NOTICE, Integer.toString(readyCount), readyCount == 1 ? "" : "s", readyCount == 1 ? "is" : "are");
     }
 
     public abstract void sendStartingMessage();
+
+    public abstract void endRound();
 
 }

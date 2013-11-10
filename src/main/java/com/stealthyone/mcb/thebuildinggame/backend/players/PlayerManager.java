@@ -111,11 +111,13 @@ public class PlayerManager {
         List<?> rawItems = config.getList("inventory");
         List<?> rawArmor = config.getList("armor");
         if (rawItems != null) {
-            List<ItemStack> invItems = InventoryIO.getItemstackList(config.getList("inventory"));
+            Log.debug("rawItems not null");
+            List<ItemStack> invItems = InventoryIO.getItemstackList(rawItems);
             inv.setContents(invItems.toArray(new ItemStack[invItems.size()]));
         }
         if (rawArmor != null) {
-            List<ItemStack> armorItems = InventoryIO.getItemstackList(config.getList("armor"));
+            Log.debug("rawArmor not null");
+            List<ItemStack> armorItems = InventoryIO.getItemstackList(rawArmor);
             inv.setArmorContents(armorItems.toArray(new ItemStack[armorItems.size()]));
         }
 

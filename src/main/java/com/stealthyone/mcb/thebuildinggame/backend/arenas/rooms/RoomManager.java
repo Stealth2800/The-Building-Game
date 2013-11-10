@@ -23,10 +23,19 @@ import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.schematic.SchematicFormat;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.domains.DefaultDomain;
+import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.flags.StateFlag.State;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.GlobalProtectedRegion;
+import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.stealthyone.mcb.stbukkitlib.lib.hooks.HookHelper;
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame.Log;
 import com.stealthyone.mcb.thebuildinggame.backend.GameBackend;
+import com.stealthyone.mcb.thebuildinggame.backend.players.BgPlayer;
 import com.stealthyone.mcb.thebuildinggame.config.ConfigHelper;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
@@ -63,6 +72,16 @@ public class RoomManager {
             world.setPVP(false);
             world.setTime(6000L);
         }
+        WorldGuardPlugin worldguard = HookHelper.getWorldGuard();
+        RegionManager regionManager = worldguard.getRegionManager(world);
+        GlobalProtectedRegion region;
+        if (regionManager.getRegion("__global__") == null) {
+            region = new GlobalProtectedRegion("__global__");
+            regionManager.addRegion(region);
+        } else {
+            region = (GlobalProtectedRegion) regionManager.getRegion("__global__");
+        }
+        region.setFlag(DefaultFlag.BUILD, State.DENY);
     }
 
     public World getRoomWorld() {
@@ -78,10 +97,17 @@ public class RoomManager {
         return checkBlock != null && checkBlock.getType() == Material.DIAMOND_BLOCK;
     }
 
+    public void markRoomModified(int x, int z, boolean modified) {
+        if (isRoomValid(x, z)) {
+            Log.debug("room is valid, marking modified");
+            Block checkBlock = getRoomWorld().getBlockAt(x * 28, 2, z * 28);
+            checkBlock.setType(modified ? Material.GOLD_BLOCK : Material.DIRT);
+        }
+    }
+
     public boolean shouldRoomReset(int x, int z) {
         if (isRoomValid(x, z)) {
-            Log.debug("room at " + x + "," + z + " should reset");
-            Block checkBlock = getRoomWorld().getBlockAt(x * 28, 2, z + 28);
+            Block checkBlock = getRoomWorld().getBlockAt(x * 28, 2, z * 28);
             return checkBlock != null && checkBlock.getType() == Material.GOLD_BLOCK;
         } else {
             return false;
@@ -97,6 +123,7 @@ public class RoomManager {
         if (isRoomValid(x, z)) {
             Log.debug("Room is valid, loading");
             loadedRooms.put(x + "," + z, new Room(x, z));
+            createRegion(x, z);
             return getRoom(x, z);
         }
         return null;
@@ -113,33 +140,41 @@ public class RoomManager {
             return getRoom(x, z);
         } else {
             Log.debug("Room is invalid, creating");
-            resetRoom(x, z);
-            return getRoom(x, z);
+            //Create room
+            return placeRoom(x, z);
         }
+    }
+
+    public Room placeRoom(int x, int z) {
+        WorldEditPlugin we = HookHelper.getWorldEdit();
+        SchematicFormat format = SchematicFormat.getFormat(roomFile);
+        CuboidClipboard cb;
+        try {
+            Log.debug("Getting schematic");
+            cb = format.load(roomFile);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        Log.debug("Got schematic");
+        EditSession session = new EditSession(new BukkitWorld(getRoomWorld()), Integer.MAX_VALUE);
+        com.sk89q.worldedit.Vector origin = new com.sk89q.worldedit.Vector((x * 28) + 1, 4, (z * 28) + 1);
+        try {
+            Log.debug("Pasting");
+            cb.paste(session, origin, false, false);
+            Log.debug("Pasted successfully");
+            return loadRoom(x, z);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
     }
 
     public void resetRoom(int x, int z) {
         if (shouldRoomReset(x, z)) {
-            WorldEditPlugin we = HookHelper.getWorldEdit();
-            SchematicFormat format = SchematicFormat.getFormat(roomFile);
-            CuboidClipboard cb;
-            try {
-                Log.debug("Getting schematic");
-                cb = format.load(roomFile);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return;
-            }
-            Log.debug("Got schematic");
-            EditSession session = new EditSession(new BukkitWorld(getRoomWorld()), Integer.MAX_VALUE);
-            com.sk89q.worldedit.Vector origin = new com.sk89q.worldedit.Vector((x * 28) + 1, 4, (z * 28) + 1);
-            try {
-                Log.debug("Pasting");
-                cb.paste(session, origin, true, false);
-                Log.debug("Pasted successfully");
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            Log.debug("Room at " + x + ", " + z + " should reset");
+            placeRoom(x, z);
+            markRoomModified(x, z, false);
         }
     }
 
@@ -148,9 +183,10 @@ public class RoomManager {
     }
 
     public Set<Room> getNextRooms(int count, boolean markInUse) {
+        long startTime = System.currentTimeMillis();
         Set<Room> returnSet = new HashSet<Room>();
         int loop = 0, x = 0, z = 0;
-        while (returnSet.size() <= count) {
+        while (returnSet.size() <= count || System.currentTimeMillis() - startTime < 10000) {
             loop++;
             //Check
             if (addRoomIfAvailable(x, z, returnSet) >= count) {
@@ -206,6 +242,39 @@ public class RoomManager {
             resetRoom(x, z);
         }
         return set.size();
+    }
+
+    public ProtectedRegion createRegion(int x, int z) {
+        if (isRoomValid(x, z)) {
+            WorldGuardPlugin worldguard = HookHelper.getWorldGuard();
+            String regionName = "bgroom_" + x + "_" + z;
+            RegionManager regionManager = worldguard.getRegionManager(getRoomWorld());
+            ProtectedRegion region = regionManager.getRegion(regionName);
+            if (region == null) {
+                com.sk89q.worldedit.BlockVector l1 = new com.sk89q.worldedit.BlockVector((x * 28) + 1, 4, (z * 28) + 1);
+                com.sk89q.worldedit.BlockVector l2 = new com.sk89q.worldedit.BlockVector((x * 28) + 24, 17, (z * 28) + 24);
+
+                region = new ProtectedCuboidRegion(regionName, l1, l2);
+                regionManager.addRegion(region);
+
+                region.setFlag(DefaultFlag.BUILD, State.ALLOW);
+                region.setFlag(DefaultFlag.MOB_SPAWNING, State.DENY);
+                region.setFlag(DefaultFlag.OTHER_EXPLOSION, State.DENY);
+                region.setFlag(DefaultFlag.TNT, State.DENY);
+                region.setFlag(DefaultFlag.PISTONS, State.DENY);
+            }
+            return region;
+        }
+        return null;
+    }
+
+    public void setRoomRegionOwner(int x, int z, BgPlayer player) {
+        ProtectedRegion region = createRegion(x, z);
+        if (region != null) {
+            DefaultDomain domain = new DefaultDomain();
+            if (player != null) domain.addPlayer(player.getName());
+            region.setOwners(domain);
+        }
     }
 
 }

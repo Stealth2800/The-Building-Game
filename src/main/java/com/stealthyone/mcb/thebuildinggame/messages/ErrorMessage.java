@@ -23,7 +23,6 @@ import com.stealthyone.mcb.stbukkitlib.lib.messages.MessageRetriever;
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
-import org.omg.CORBA.NO_PERMISSION;
 
 public enum ErrorMessage implements IMessagePath {
 
@@ -36,19 +35,28 @@ public enum ErrorMessage implements IMessagePath {
     ARENA_INVALID_CONFIGURATION,
     ARENA_ALREADY_ENABLED,
     ARENA_ALREADY_DISABLED,
+    ARENA_MUST_BE_DISABLED,
 
+    INVALID_ROOM,
+    INVALID_ROUND_TIME,
+    INVALID_RESULT_NUMBER,
     INVALID_PLAYER_COUNT,
     NOT_THINKING_ROUND,
     CANNOT_MARK_READY,
 
     NOT_GUESSING_ROUND,
+    NOT_RESULTS_ROUND,
     GUESS_ALREADY_SUBMITTED,
+
+    UNKNOWN_ARENA_SETTING,
 
     IDEA_ALREADY_SUBMITTED,
 
     ARENA_DOES_NOT_EXIST,
 
     CANNOT_JOIN_GAME,
+
+    PLAYERS_IN_ARENA,
 
     MUST_BE_INT,
 	MUST_BE_PLAYER,

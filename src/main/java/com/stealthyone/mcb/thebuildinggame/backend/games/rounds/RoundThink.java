@@ -34,14 +34,19 @@ public class RoundThink extends Round {
     }
 
     public boolean submitIdea(BgPlayer player, String idea) {
-        if (gameInstance.isPlayerJoined(player)) {
+        if (!hasPlayerSubmittedIdea(player)) {
             ideas.put(player, idea);
             sendReadyMessage(ideas.size());
             gameInstance.getScore(player).setScore(1);
+            ((RoundResults) gameInstance.getRound(gameInstance.getPlayerCount() + 1)).addResult(player, NoticeMessage.RESULTS_THINK.getMessage(player.getName(), idea));
             return true;
         } else {
             return false;
         }
+    }
+
+    public boolean hasPlayerSubmittedIdea(BgPlayer player) {
+        return getIdea(player) != null;
     }
 
     public String getIdea(BgPlayer player) {
@@ -56,5 +61,8 @@ public class RoundThink extends Round {
     public void sendStartingMessage() {
         gameInstance.sendMessage(NoticeMessage.START_MESSAGE_THINK);
     }
+
+    @Override
+    public void endRound() {}
 
 }

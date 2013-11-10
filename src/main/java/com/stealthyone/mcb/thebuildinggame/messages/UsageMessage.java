@@ -29,7 +29,9 @@ public enum UsageMessage {
 
     GAME_GUESS("/%s game guess <guess word/phrase>"),
     GAME_IDEA("/%s game idea <idea word/phrase>"),
-    GAME_JOIN("/%s game join <arena ID");
+    GAME_JOIN("/%s game join <arena ID"),
+    GAME_RESULTS("/%s game results <result number>"),
+    GAME_ROOM("/%s game room <room number>");
 	
 	private String message;
 	

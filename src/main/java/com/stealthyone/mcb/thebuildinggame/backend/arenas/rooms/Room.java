@@ -58,7 +58,8 @@ public class Room {
     public void setInUse(boolean newValue) {
         if (isInUse() != newValue) {
             inUse = newValue;
-            if (newValue) TheBuildingGame.getInstance().getGameBackend().getRoomManager().resetRoom(x, z);
+            RoomManager roomManager = TheBuildingGame.getInstance().getGameBackend().getRoomManager();
+            if (newValue) roomManager.markRoomModified(x, z, true);
         }
     }
 

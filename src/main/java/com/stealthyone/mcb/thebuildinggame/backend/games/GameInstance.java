@@ -86,7 +86,9 @@ public class GameInstance {
                 Player rawPlayer = player.getPlayer();
                 Score score = objective.getScore(rawPlayer);
                 score.setScore(0);
-                rawPlayer.setScoreboard(scoreboard);
+            }
+            for (BgPlayer player : players.values()) {
+                player.getPlayer().setScoreboard(scoreboard);
             }
         }
     }
@@ -193,6 +195,10 @@ public class GameInstance {
             arena.updateSigns();
             TheBuildingGame.getInstance().getGameBackend().getPlayerManager().reindexPlayerArenas();
             player.setCurrentGame(null);
+            if (state == GameState.IN_PROGRESS) {
+                sendMessage(NoticeMessage.GAME_ENDED_PLAYER_QUIT);
+                endGame();
+            }
             return true;
         } else {
             return false;
@@ -208,6 +214,7 @@ public class GameInstance {
             Round round = getRound(currentRound);
             round.teleportPlayers();
             round.sendStartingMessage();
+            setupScoreboard();
             setState(GameState.IN_PROGRESS);
             roundTime = arena.getRoundTime();
         }
@@ -274,8 +281,10 @@ public class GameInstance {
             setState(GameState.ENDING);
             clearPlayers();
             for (Round round : rounds.values()) {
-                round.clearRooms();
+                round.cleanup();
             }
+            rounds.clear();
+            setState(GameState.WAITING);
         }
     }
 
@@ -283,6 +292,7 @@ public class GameInstance {
         PlayerManager playerManager = TheBuildingGame.getInstance().getGameBackend().getPlayerManager();
         for (BgPlayer player : players.values()) {
             player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+            player.setCurrentGame(null);
             playerManager.loadPlayerData(player);
         }
         players.clear();
@@ -304,6 +314,7 @@ public class GameInstance {
     public void endCurrentRound() {
         Round round = getCurrentRound();
         if (round != null) {
+            round.endRound();
             if (round instanceof RoundResults) {
                 sendMessage(NoticeMessage.GAME_OVER);
                 endGame();

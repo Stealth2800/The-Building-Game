@@ -110,7 +110,7 @@ public class GameSign {
             sign.setLine(0, "Arena " + arena.getId());
             GameInstance gameInstance = arena.getGameInstance();
             if (!arena.isEnabled()) {
-                sign.setLine(1, "" + ChatColor.DARK_RED + ChatColor.ITALIC + "Disabled");
+                sign.setLine(1, "" + ChatColor.DARK_RED + ChatColor.ITALIC + "DISABLED");
             } else if (gameInstance != null) {
                 sign.setLine(1, gameInstance.getState().getText());
                 sign.setLine(2, gameInstance.getPlayerCount() + "/" + arena.getMaxPlayers());

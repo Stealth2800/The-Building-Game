@@ -34,7 +34,7 @@ public class RoundGuess extends Round {
     }
 
     public boolean submitGuess(BgPlayer player, String guess) {
-        if (gameInstance.isPlayerJoined(player)) {
+        if (!hasPlayerGuessed(player)) {
             guesses.put(player, guess);
             sendReadyMessage(guesses.size());
             gameInstance.getScore(player).setScore(1);
@@ -42,6 +42,10 @@ public class RoundGuess extends Round {
         } else {
             return false;
         }
+    }
+
+    public boolean hasPlayerGuessed(BgPlayer player) {
+        return getGuess(player) != null;
     }
 
     public String getGuess(BgPlayer player) {
@@ -55,6 +59,14 @@ public class RoundGuess extends Round {
     @Override
     public void sendStartingMessage() {
         gameInstance.sendMessage(NoticeMessage.START_MESSAGE_GUESS);
+    }
+
+    @Override
+    public void endRound() {
+        RoundBuild prevRound = (RoundBuild) gameInstance.getRound(roundNum - 1);
+        for (BgPlayer player : gameInstance.getPlayerIds().values()) {
+            ((RoundResults) gameInstance.getRound(gameInstance.getPlayerCount() + 1)).addResult(prevRound.getLastIdeaPlayer(prevRound.getLastIdeaPlayer(player)), NoticeMessage.RESULTS_GUESS.getMessage(player.getName(), guesses.get(player)));
+        }
     }
 
 }
