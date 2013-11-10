@@ -69,6 +69,7 @@ public enum NoticeMessage implements IMessagePath {
 
     ROUND_END,
 	PLUGIN_RELOADED,
+    PLUGIN_SAVED,
 
     SIGN_CREATED,
     SIGN_DESTROYED;

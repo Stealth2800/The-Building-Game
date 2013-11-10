@@ -22,3 +22,5 @@ debug:
   description: 'Debug commands for development purposes of the plugin'
   messages:
     - '&e/bg debug genroom [amount] &6&o- Generate a new room in the room world'
+    - '&e/bg debug loadinv &6&o- Load your inventory, location, etc from the file'
+    - '&e/bg debug saveinv &6&o- Save your inventory, location, etc to the file'

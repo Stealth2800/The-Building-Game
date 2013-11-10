@@ -31,6 +31,7 @@ import com.stealthyone.mcb.thebuildinggame.backend.games.GameInstance;
 import com.stealthyone.mcb.thebuildinggame.backend.games.GameState;
 import com.stealthyone.mcb.thebuildinggame.backend.games.rounds.*;
 import com.stealthyone.mcb.thebuildinggame.backend.players.BgPlayer;
+import com.stealthyone.mcb.thebuildinggame.backend.players.PlayerManager;
 import com.stealthyone.mcb.thebuildinggame.messages.ErrorMessage;
 import com.stealthyone.mcb.thebuildinggame.messages.NoticeMessage;
 import com.stealthyone.mcb.thebuildinggame.messages.UsageMessage;
@@ -79,6 +80,11 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 /* Reload plugin config command */
                 case "reload":
                     cmdReload(sender, command, label, args);
+                    return true;
+
+                /* Save plugin files command */
+                case "save":
+                    cmdSave(sender, command, label, args);
                     return true;
 
                 default:
@@ -380,6 +386,16 @@ public class CmdTheBuildingGame implements CommandExecutor {
                     cmdDebug_Genroom(sender, command, label, args);
                     return;
 
+                /* Load inventory */
+                case "loadinv":
+                    cmdDebug_Loadinv(sender, command, label, args);
+                    return;
+
+                /* Save inventory */
+                case "saveinv":
+                    cmdDebug_Saveinv(sender, command, label, args);
+                    return;
+
                 case "help":
                     plugin.getHelpManager().handleHelpCommand(sender, "debug", label, args, 2);
                     return;
@@ -388,6 +404,8 @@ public class CmdTheBuildingGame implements CommandExecutor {
                     ErrorMessage.UNKNOWN_COMMAND.sendTo(sender, label + " debug");
                     break;
             }
+            plugin.getHelpManager().handleHelpCommand(sender, "debug", label, args, 1);
+        } else {
             plugin.getHelpManager().handleHelpCommand(sender, "debug", label, args, 1);
         }
     }
@@ -409,12 +427,38 @@ public class CmdTheBuildingGame implements CommandExecutor {
         sender.sendMessage("Created " + amount + " room(s)");
     }
 
+    /*
+     * Debug - Load inventory
+     */
+    private void cmdDebug_Loadinv(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            ErrorMessage.MUST_BE_PLAYER.sendTo(sender);
+        } else {
+            PlayerManager playerManager = plugin.getGameBackend().getPlayerManager();
+            playerManager.loadPlayerData(playerManager.castPlayer((Player) sender));
+            sender.sendMessage("inventory loaded");
+        }
+    }
+
+    /*
+     * Debug - Save inventory
+     */
+    private void cmdDebug_Saveinv(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            ErrorMessage.MUST_BE_PLAYER.sendTo(sender);
+        } else {
+            PlayerManager playerManager = plugin.getGameBackend().getPlayerManager();
+            playerManager.savePlayerData(playerManager.castPlayer((Player) sender));
+            sender.sendMessage("inventory saved");
+        }
+    }
+
     /**
      * Handler for game commands
      * @param sender
      * @param command
      * @param label
-     * @param args
+     * @pardeb ugam args
      */
     private void cmdGame(CommandSender sender, Command command, String label, String[] args) {
         if (args.length > 1) {
@@ -717,6 +761,22 @@ public class CmdTheBuildingGame implements CommandExecutor {
         } else {
             plugin.reloadConfig();
             NoticeMessage.PLUGIN_RELOADED.sendTo(sender);
+        }
+    }
+
+    /**
+     * Handler for save command
+     * @param sender
+     * @param command
+     * @param label
+     * @param args
+     */
+    private void cmdSave(CommandSender sender, Command command, String label, String[] args) {
+        if (!PermissionNode.ADMIN_SAVE.isAllowed(sender)) {
+            ErrorMessage.NO_PERMISSION.sendTo(sender);
+        } else {
+            plugin.saveAll();
+            NoticeMessage.PLUGIN_SAVED.sendTo(sender);
         }
     }
 

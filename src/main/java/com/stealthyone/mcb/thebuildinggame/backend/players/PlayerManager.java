@@ -99,26 +99,51 @@ public class PlayerManager {
     }
 
     public void loadPlayerData(BgPlayer player) {
+        Log.debug("loadPlayerData for: " + player.getName());
         ConfigurationSection config = tempPlayerDataFile.getConfig().getConfigurationSection(player.getName().toLowerCase());
-        if (config == null) return;
+        if (config == null) {
+            Log.debug("config is null");
+            return;
+        } else {
+            Log.debug("config isn't null");
+            Log.debug("sections: " + config.getKeys(false).toString());
+            Log.debug("inventory is null: " + (config.get("inventory") == null));
+            Log.debug("inventory is list: " + (config.get("inventory") instanceof List));
+            Log.debug("inventory class: " + config.get("inventory").getClass().getName());
+        }
 
         Player rawPlayer = player.getPlayer();
 
         rawPlayer.teleport(ConfigUtils.getLocation(config.getString("prevLoc")), TeleportCause.PLUGIN);
-
         PlayerInventory inv = rawPlayer.getInventory();
         inv.clear();
-        List<?> rawItems = config.getList("inventory");
-        List<?> rawArmor = config.getList("armor");
+        ItemStack[] rawItems;
+        try {
+            rawItems = (ItemStack[]) config.get("inventory");
+        } catch (ClassCastException ex) {
+            List<ItemStack> list = InventoryIO.getItemstackList(config.getList("inventory"));
+            rawItems = list.toArray(new ItemStack[list.size()]);
+        }
+
+        ItemStack[] rawArmor;
+        try {
+            rawArmor = (ItemStack[]) config.get("armor");
+        } catch (ClassCastException ex) {
+            List<ItemStack> list = InventoryIO.getItemstackList(config.getList("armor"));
+            rawArmor = list.toArray(new ItemStack[list.size()]);
+        }
+
         if (rawItems != null) {
             Log.debug("rawItems not null");
-            List<ItemStack> invItems = InventoryIO.getItemstackList(rawItems);
-            inv.setContents(invItems.toArray(new ItemStack[invItems.size()]));
+            inv.setContents(rawItems);
+        } else {
+            Log.debug("rawItems null");
         }
         if (rawArmor != null) {
             Log.debug("rawArmor not null");
-            List<ItemStack> armorItems = InventoryIO.getItemstackList(rawArmor);
-            inv.setArmorContents(armorItems.toArray(new ItemStack[armorItems.size()]));
+            inv.setArmorContents(rawArmor);
+        } else {
+            Log.debug("rawArmor null");
         }
 
         rawPlayer.setExp((float) config.getDouble("exp"));

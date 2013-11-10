@@ -83,6 +83,11 @@ public final class TheBuildingGame extends JavaPlugin implements Autosavable {
 
     @Override
     public final void onEnable() {
+        /* Setup config */
+        saveDefaultConfig();
+        getConfig().options().copyDefaults(false);
+        saveConfig();
+
         /* Setup important plugin parts */
         helpManager = HelpAPI.registerHelp(this);
         messageManager = new MessageRetriever(this);

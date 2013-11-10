@@ -28,6 +28,7 @@ import com.stealthyone.mcb.thebuildinggame.backend.games.GameInstance;
 import com.stealthyone.mcb.thebuildinggame.backend.players.BgPlayer;
 import com.stealthyone.mcb.thebuildinggame.messages.ErrorMessage;
 import com.stealthyone.mcb.thebuildinggame.messages.NoticeMessage;
+import com.stealthyone.mcb.thebuildinggame.permissions.PermissionNode;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -133,12 +134,14 @@ public class GameSign {
             ErrorMessage.ARENA_DOES_NOT_EXIST.sendTo(player, Integer.toString(getArenaId()));
         } else if (!arena.isEnabled()) {
             NoticeMessage.ARENA_DISABLED.sendTo(player, Integer.toString(getArenaId()));
+        } else if (!PermissionNode.GAME_PLAY.isAllowed(player)) {
+            ErrorMessage.NO_PERMISSION.sendTo(player);
         } else {
             GameInstance gameInstance = arena.getGameInstance();
             if (!player.isSneaking()) {
                 if (gameInstance.addPlayer(playerCast)) {
                     NoticeMessage.JOINED_GAME.sendTo(player);
-                //} else if (playerCast.getCurrentGame().equals(gameInstance)) {
+                    //} else if (playerCast.getCurrentGame().equals(gameInstance)) {
                 } else if (gameInstance.isPlayerJoined(playerCast)) {
                     ErrorMessage.ALREADY_IN_GAME.sendTo(player);
                     NoticeMessage.INFO_GAME_LEAVE.sendTo(player);

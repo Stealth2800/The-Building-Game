@@ -19,6 +19,7 @@
 package com.stealthyone.mcb.thebuildinggame.backend.arenas.rooms;
 
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
+import com.stealthyone.mcb.thebuildinggame.TheBuildingGame.Log;
 import com.stealthyone.mcb.thebuildinggame.backend.players.BgPlayer;
 import org.bukkit.Location;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
@@ -52,11 +53,14 @@ public class Room {
     }
 
     public boolean isInUse() {
+        Log.debug("room " + x + ", " + z + " is in use: " + inUse);
         return inUse;
     }
 
     public void setInUse(boolean newValue) {
+        Log.debug("set in use, newValue: " + newValue);
         if (isInUse() != newValue) {
+            Log.debug("set in use, marking room " + x + ", " + z + " in use: " + newValue);
             inUse = newValue;
             RoomManager roomManager = TheBuildingGame.getInstance().getGameBackend().getRoomManager();
             if (newValue) roomManager.markRoomModified(x, z, true);

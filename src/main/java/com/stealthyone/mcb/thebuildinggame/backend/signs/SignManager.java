@@ -29,6 +29,7 @@ import com.stealthyone.mcb.thebuildinggame.backend.GameBackend;
 import com.stealthyone.mcb.thebuildinggame.backend.arenas.Arena;
 import com.stealthyone.mcb.thebuildinggame.messages.ErrorMessage;
 import com.stealthyone.mcb.thebuildinggame.messages.NoticeMessage;
+import com.stealthyone.mcb.thebuildinggame.permissions.PermissionNode;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -142,6 +143,7 @@ public class SignManager {
         Player player = e.getPlayer();
         String[] lines = e.getLines();
         if (lines[0].equalsIgnoreCase("[BGArena]")) {
+            if (!PermissionNode.ADMIN_SIGN_CREATE.isAllowed(player)) return;
             int arenaId;
             try {
                 arenaId = Integer.parseInt(lines[1]);

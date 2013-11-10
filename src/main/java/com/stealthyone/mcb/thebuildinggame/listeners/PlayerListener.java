@@ -67,7 +67,6 @@ public class PlayerListener implements Listener {
                 playerManager.loadPlayerData(playerManager.castPlayer(e.getPlayer()));
             }
         }, 20L);
-
     }
 
 }

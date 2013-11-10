@@ -59,8 +59,7 @@ public abstract class Round {
             while (roomNum > playerCount) roomNum -= playerCount;
             BgPlayer player = players.get(i);
             Room room = rooms.get(roomNum - 1);
-            room.setInUse(true);
-            roomManager.setRoomRegionOwner(room.getX(), room.getZ(), player);
+            //room.setInUse(true);
             roomAllocation.put(player, room);
         }
     }
@@ -88,6 +87,14 @@ public abstract class Round {
 
     public void sendReadyMessage(int readyCount) {
         gameInstance.sendMessage(NoticeMessage.PLAYER_READY_NOTICE, Integer.toString(readyCount), readyCount == 1 ? "" : "s", readyCount == 1 ? "is" : "are");
+    }
+
+    public void startRound() {
+        RoomManager roomManager = TheBuildingGame.getInstance().getGameBackend().getRoomManager();
+        for (Entry<BgPlayer, Room> entry : roomAllocation.entrySet()) {
+            Room room = entry.getValue();
+            roomManager.setRoomRegionOwner(room.getX(), room.getZ(), (this instanceof RoundBuild) ? entry.getKey() : null);
+        }
     }
 
     public abstract void sendStartingMessage();

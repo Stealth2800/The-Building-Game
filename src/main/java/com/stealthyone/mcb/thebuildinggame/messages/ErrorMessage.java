@@ -43,6 +43,7 @@ public enum ErrorMessage implements IMessagePath {
     INVALID_PLAYER_COUNT,
     NOT_THINKING_ROUND,
     CANNOT_MARK_READY,
+    GAME_CANNOT_PLACE_SIGN,
 
     NOT_GUESSING_ROUND,
     NOT_RESULTS_ROUND,
@@ -102,7 +103,7 @@ public enum ErrorMessage implements IMessagePath {
 		
 		for (String message : messages) {
 			message = ChatColor.RED + message;
-			sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message.replace("{TAG}", ChatColor.GOLD + "[" + TheBuildingGame.getInstance().getName() + "] " + ChatColor.RED)));
+			sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message.replace("{TAG}", messageRetriever.getTag())));
 		}
 	}
 	
@@ -112,7 +113,7 @@ public enum ErrorMessage implements IMessagePath {
 		
 		for (String message : messages) {
 			message = ChatColor.RED + message;
-			sender.sendMessage(ChatColor.translateAlternateColorCodes('&', ChatColor.RED + String.format(message.replace("{TAG}", ChatColor.GOLD + "[" + TheBuildingGame.getInstance().getName() + "] " + ChatColor.RED), (Object[]) replacements)));
+			sender.sendMessage(ChatColor.translateAlternateColorCodes('&', ChatColor.RED + String.format(message.replace("{TAG}", messageRetriever.getTag()), (Object[]) replacements)));
 		}
 	}
 	

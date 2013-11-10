@@ -110,6 +110,10 @@ public class GameInstance {
     public void gameTick() {
         if (state != GameState.INACTIVE) {
             if (roundTime >= 0) {
+                if (state == GameState.IN_PROGRESS) {
+                    Round curRound = getCurrentRound();
+                    if (!(curRound instanceof RoundResults || curRound instanceof RoundBuild)) roundTime++;
+                }
                 roundTime--;
                 time.setScore(roundTime);
             }
@@ -117,7 +121,7 @@ public class GameInstance {
             if (state == GameState.WAITING) {
                 if (getPlayerCount() == arena.getMaxPlayers()) {
                     //start game
-                    if (roundTime == -2) roundTime = 30;
+                    if (roundTime == -2) roundTime = 15;
 
                     if (roundTime == 30 || roundTime == 15 || roundTime >= 0 && roundTime <= 10)
                         sendMessage(NoticeMessage.GAME_TIME_START_NOTICE, TimeUtils.translateSeconds(roundTime));
@@ -126,7 +130,7 @@ public class GameInstance {
                         startGame();
                 } else if (roundTime != -2) {
                     roundTime = -2;
-                    sendMessage(NoticeMessage.GAME_STARTING_CANCELLED);
+                    sendMessage(NoticeMessage.GAME_STARTING_CANCELLED, "Player quit");
                 }
             } else if (state == GameState.IN_PROGRESS) {
                 Round currentRound = getCurrentRound();
@@ -237,6 +241,8 @@ public class GameInstance {
             Log.debug("setting up rounds");
             int playerCount = getPlayerCount();
             RoomManager roomManager = TheBuildingGame.getInstance().getGameBackend().getRoomManager();
+            /*int roomCount = new Double((0.5D * Math.pow(playerCount, 2)) - 0.5D * playerCount).intValue();
+            List<Room> tempRooms = new ArrayList<Room>(roomManager.getNextRooms(roomCount));*/
             for (int i = 1; i <= playerCount + 1; i++) {
                 Log.debug("i: " + i);
                 if (i == 1) {
@@ -284,6 +290,7 @@ public class GameInstance {
                 round.cleanup();
             }
             rounds.clear();
+            rooms.clear();
             setState(GameState.WAITING);
         }
     }
@@ -291,6 +298,7 @@ public class GameInstance {
     private void clearPlayers() {
         PlayerManager playerManager = TheBuildingGame.getInstance().getGameBackend().getPlayerManager();
         for (BgPlayer player : players.values()) {
+            Log.debug("Clear player: " + player.getName());
             player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
             player.setCurrentGame(null);
             playerManager.loadPlayerData(player);
@@ -323,8 +331,10 @@ public class GameInstance {
                 Round newRound = getCurrentRound();
                 newRound.teleportPlayers();
                 newRound.sendStartingMessage();
+                newRound.startRound();
                 roundTime = arena.getRoundTime();
                 resetScores();
+                if (!(newRound instanceof RoundResults || newRound instanceof RoundBuild)) time.setScore(0);
             }
         }
     }

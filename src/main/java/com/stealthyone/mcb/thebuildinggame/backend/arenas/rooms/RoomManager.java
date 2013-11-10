@@ -21,7 +21,6 @@ package com.stealthyone.mcb.thebuildinggame.backend.arenas.rooms;
 import com.sk89q.worldedit.CuboidClipboard;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.schematic.SchematicFormat;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.domains.DefaultDomain;
@@ -99,7 +98,7 @@ public class RoomManager {
 
     public void markRoomModified(int x, int z, boolean modified) {
         if (isRoomValid(x, z)) {
-            Log.debug("room is valid, marking modified");
+            Log.debug("room is valid, marking modified: " + modified);
             Block checkBlock = getRoomWorld().getBlockAt(x * 28, 2, z * 28);
             checkBlock.setType(modified ? Material.GOLD_BLOCK : Material.DIRT);
         }
@@ -108,7 +107,7 @@ public class RoomManager {
     public boolean shouldRoomReset(int x, int z) {
         if (isRoomValid(x, z)) {
             Block checkBlock = getRoomWorld().getBlockAt(x * 28, 2, z * 28);
-            return checkBlock != null && checkBlock.getType() == Material.GOLD_BLOCK;
+            return checkBlock != null && !getRoom(x, z).isInUse() && checkBlock.getType() == Material.GOLD_BLOCK;
         } else {
             return false;
         }
@@ -120,13 +119,14 @@ public class RoomManager {
 
     public Room loadRoom(int x, int z) {
         Log.debug("loadRoom at " + x + ", " + z);
-        if (isRoomValid(x, z)) {
+        Room room = getRoom(x, z);
+        if (room == null && isRoomValid(x, z)) {
             Log.debug("Room is valid, loading");
             loadedRooms.put(x + "," + z, new Room(x, z));
             createRegion(x, z);
             return getRoom(x, z);
         }
-        return null;
+        return room;
     }
 
     public Room createRoom(int x, int z) {
@@ -146,7 +146,6 @@ public class RoomManager {
     }
 
     public Room placeRoom(int x, int z) {
-        WorldEditPlugin we = HookHelper.getWorldEdit();
         SchematicFormat format = SchematicFormat.getFormat(roomFile);
         CuboidClipboard cb;
         try {
@@ -173,8 +172,7 @@ public class RoomManager {
     public void resetRoom(int x, int z) {
         if (shouldRoomReset(x, z)) {
             Log.debug("Room at " + x + ", " + z + " should reset");
-            placeRoom(x, z);
-            markRoomModified(x, z, false);
+            if (!placeRoom(x, z).isInUse()) markRoomModified(x, z, false);;
         }
     }
 
@@ -183,53 +181,65 @@ public class RoomManager {
     }
 
     public Set<Room> getNextRooms(int count, boolean markInUse) {
+        Log.debug("getRooms, count: " + count);
         long startTime = System.currentTimeMillis();
         Set<Room> returnSet = new HashSet<Room>();
         int loop = 0, x = 0, z = 0;
-        while (returnSet.size() <= count || System.currentTimeMillis() - startTime < 10000) {
+        outerloop:
+        while (returnSet.size() < count || System.currentTimeMillis() - startTime < 10000) {
             loop++;
             //Check
-            if (addRoomIfAvailable(x, z, returnSet) >= count) {
-                return returnSet;
+            if (addRoomIfAvailable(x, z, returnSet) == count) {
+                Log.debug("count equal, end loop");
+                break;
             }
 
             x++;
 
             //Check
-            if (addRoomIfAvailable(x, z, returnSet) >= count) {
-                return returnSet;
+            if (addRoomIfAvailable(x, z, returnSet) == count) {
+                Log.debug("count equal, end loop");
+                break;
             }
 
             for (int i = 0; i < Math.abs(1 + 2 * (loop - 1)); i++) {
                 z--;
                 //Check
-                if (addRoomIfAvailable(x, z, returnSet) >= count) {
-                    return returnSet;
+                if (addRoomIfAvailable(x, z, returnSet) == count) {
+                    Log.debug("count equal, end loop");
+                    break outerloop;
                 }
             }
+
             for (int i = 0; i < Math.abs(2 * loop); i++) {
                 x--;
                 //Check
-                if (addRoomIfAvailable(x, z, returnSet) >= count) {
-                    return returnSet;
+                if (addRoomIfAvailable(x, z, returnSet) == count) {
+                    Log.debug("count equal, end loop");
+                    break outerloop;
                 }
             }
+
             for (int i = 0; i < Math.abs(2 * loop); i++) {
                 z++;
                 //Check
-                if (addRoomIfAvailable(x, z, returnSet) >= count) {
-                    return returnSet;
+                if (addRoomIfAvailable(x, z, returnSet) == count) {
+                    Log.debug("count equal, end loop");
+                    break outerloop;
                 }
             }
+
             for (int i = 0; i < Math.abs(2 * loop); i++) {
                 x++;
                 //Check
-                if (addRoomIfAvailable(x, z, returnSet) >= count) {
-                    return returnSet;
+                if (addRoomIfAvailable(x, z, returnSet) == count) {
+                    Log.debug("count equal, end loop");
+                    break outerloop;
                 }
             }
         }
         if (markInUse) {
+            Log.debug("setting rooms in use");
             for (Room room : returnSet) room.setInUse(true);
         }
         return returnSet;
@@ -238,9 +248,12 @@ public class RoomManager {
     private int addRoomIfAvailable(int x, int z, Set<Room> set) {
         Room room = createRoom(x, z);
         if (room != null && !room.isInUse()) {
+            Log.debug("room at " + x + ", " + z + " is not in use");
             set.add(room);
             resetRoom(x, z);
+            Log.debug("room added to set");
         }
+        Log.debug("set size: " + set.size());
         return set.size();
     }
 
@@ -257,7 +270,6 @@ public class RoomManager {
                 region = new ProtectedCuboidRegion(regionName, l1, l2);
                 regionManager.addRegion(region);
 
-                region.setFlag(DefaultFlag.BUILD, State.ALLOW);
                 region.setFlag(DefaultFlag.MOB_SPAWNING, State.DENY);
                 region.setFlag(DefaultFlag.OTHER_EXPLOSION, State.DENY);
                 region.setFlag(DefaultFlag.TNT, State.DENY);

@@ -24,7 +24,9 @@ public enum PermissionNode {
 
     ADMIN_ARENA_CREATE,
     ADMIN_ARENA_MODIFY,
+    ADMIN_SIGN_CREATE,
     ADMIN_RELOAD,
+    ADMIN_SAVE,
 
     ARENAS_INFO,
     ARENAS_LIST,
