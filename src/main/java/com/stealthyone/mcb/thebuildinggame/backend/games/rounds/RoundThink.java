@@ -38,7 +38,7 @@ public class RoundThink extends Round {
             ideas.put(player, idea);
             sendReadyMessage(ideas.size());
             gameInstance.getScore(player).setScore(1);
-            ((RoundResults) gameInstance.getRound(gameInstance.getPlayerCount() + 1)).addResult(player, NoticeMessage.RESULTS_THINK.getMessage(player.getName(), idea));
+            //((RoundResults) gameInstance.getRound(gameInstance.getPlayerCount() + 1)).addResult(player, NoticeMessage.RESULTS_THINK.getMessage(player.getName(), idea));
             return true;
         } else {
             return false;

@@ -81,6 +81,13 @@ public class RoomManager {
             region = (GlobalProtectedRegion) regionManager.getRegion("__global__");
         }
         region.setFlag(DefaultFlag.BUILD, State.DENY);
+        region.setFlag(DefaultFlag.FIRE_SPREAD, State.DENY);
+        region.setFlag(DefaultFlag.MOB_SPAWNING, State.DENY);
+        region.setFlag(DefaultFlag.TNT, State.DENY);
+        region.setFlag(DefaultFlag.OTHER_EXPLOSION, State.DENY);
+        region.setFlag(DefaultFlag.PISTONS, State.DENY);
+        region.setFlag(DefaultFlag.ITEM_DROP, State.DENY);
+        region.setFlag(DefaultFlag.EXP_DROPS, State.DENY);
     }
 
     public World getRoomWorld() {
@@ -269,11 +276,6 @@ public class RoomManager {
 
                 region = new ProtectedCuboidRegion(regionName, l1, l2);
                 regionManager.addRegion(region);
-
-                region.setFlag(DefaultFlag.MOB_SPAWNING, State.DENY);
-                region.setFlag(DefaultFlag.OTHER_EXPLOSION, State.DENY);
-                region.setFlag(DefaultFlag.TNT, State.DENY);
-                region.setFlag(DefaultFlag.PISTONS, State.DENY);
             }
             return region;
         }

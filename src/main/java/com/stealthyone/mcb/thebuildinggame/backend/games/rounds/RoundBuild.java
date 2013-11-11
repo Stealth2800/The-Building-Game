@@ -93,10 +93,10 @@ public class RoundBuild extends Round {
 
     @Override
     public void endRound() {
-        RoundResults resultsRound = (RoundResults) gameInstance.getRound(gameInstance.getPlayerCount() + 1);
+        /*RoundResults resultsRound = (RoundResults) gameInstance.getRound(gameInstance.getPlayerCount() + 1);
         for (BgPlayer player : gameInstance.getPlayerIds().values()) {
             resultsRound.addResult(getLastIdeaPlayer(player), NoticeMessage.RESULTS_BUILD.getMessage(player.getName(), getIdea(player), Integer.toString(resultsRound.getRoomNumber(getRoom(player)))));
-        }
+        }*/
     }
 
 }

@@ -47,6 +47,38 @@ public class RoundResults extends RoundBuild {
         gameInstance.sendMessage(NoticeMessage.START_MESSAGE_RESULTS);
     }
 
+    public void indexResults() {
+        int roundCount = gameInstance.getPlayerCount();
+        for (Entry<Integer, BgPlayer> entry : gameInstance.getPlayerIds().entrySet()) {
+            BgPlayer player = entry.getValue();
+            int playerId = entry.getKey();
+            for (int i = 1; i <= roundCount; i++) {
+                Round round = gameInstance.getRound(i);
+                if (i == 1) {
+                    //Think
+                    addResult(player, NoticeMessage.RESULTS_THINK.getMessage(player.getName(), ((RoundThink) round).getIdea(player)));
+                } else if (i % 2 == 0) {
+                    //Build round
+                    int finalId = playerId - (i - 1);
+                    while (finalId <= 0) finalId += roundCount;
+                    BgPlayer buildPlayer = gameInstance.getPlayerById(finalId);
+                    RoundBuild roundCast = (RoundBuild) round;
+                    String buildIdea = roundCast.getIdea(buildPlayer);
+                    int roomNum = getRoomNumber(roundCast.getRoom(buildPlayer));
+                    addResult(player, NoticeMessage.RESULTS_BUILD.getMessage(buildPlayer.getName(), buildIdea, Integer.toString(roomNum)));
+                } else {
+                    //Guess
+                    int finalId = playerId - (i - 1);
+                    while (finalId <= 0) finalId += roundCount;
+                    BgPlayer guessPlayer = gameInstance.getPlayerById(finalId);
+                    RoundGuess roundCast = (RoundGuess) round;
+                    String guess = roundCast.getGuess(guessPlayer);
+                    addResult(player, NoticeMessage.RESULTS_GUESS.getMessage(guessPlayer.getName(), guess));
+                }
+            }
+        }
+    }
+
     public List<Room> getRoomNumbers() {
         return tempRoomNumbers;
     }
@@ -77,6 +109,12 @@ public class RoundResults extends RoundBuild {
             if (entry.getKey().equals(player)) return entry;
         }
         return null;
+    }
+
+    @Override
+    public void startRound() {
+        super.startRound();
+        indexResults();
     }
 
     @Override
