@@ -23,6 +23,7 @@ import com.stealthyone.mcb.stbukkitlib.lib.autosaving.AutosavingAPI;
 import com.stealthyone.mcb.stbukkitlib.lib.help.HelpAPI;
 import com.stealthyone.mcb.stbukkitlib.lib.help.HelpManager;
 import com.stealthyone.mcb.stbukkitlib.lib.messages.MessageRetriever;
+import com.stealthyone.mcb.stbukkitlib.lib.updates.UpdateChecker;
 import com.stealthyone.mcb.thebuildinggame.backend.GameBackend;
 import com.stealthyone.mcb.thebuildinggame.commands.CmdTheBuildingGame;
 import com.stealthyone.mcb.thebuildinggame.config.ConfigHelper;
@@ -70,6 +71,7 @@ public final class TheBuildingGame extends JavaPlugin implements Autosavable {
 
     private HelpManager helpManager;
     private MessageRetriever messageManager;
+    private UpdateChecker updateChecker;
 
     private GameBackend gameBackend;
 
@@ -104,6 +106,7 @@ public final class TheBuildingGame extends JavaPlugin implements Autosavable {
         getCommand("thebuildinggame").setExecutor(new CmdTheBuildingGame(this));
 
         AutosavingAPI.registerAutosavable(this, "main", this, ConfigHelper.AUTOSAVE_INTERVAL.getInt() * 60);
+        updateChecker = UpdateChecker.scheduleForMe(this, "http://dev.bukkit.org/bukkit-plugins/building-game/files.rss");
         Log.info("TheBuildingGame v" + getDescription().getVersion() + " by Stealth2800 enabled!");
     }
 
@@ -124,6 +127,10 @@ public final class TheBuildingGame extends JavaPlugin implements Autosavable {
 
     public MessageRetriever getMessageManager() {
         return messageManager;
+    }
+
+    public UpdateChecker getUpdateChecker() {
+        return updateChecker;
     }
 
     public final GameBackend getGameBackend() {
