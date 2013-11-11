@@ -197,7 +197,9 @@ public class GameInstance {
         if (isPlayerJoined(player)) {
             players.remove(player.getName().toLowerCase());
             arena.updateSigns();
-            TheBuildingGame.getInstance().getGameBackend().getPlayerManager().reindexPlayerArenas();
+            PlayerManager playerManager = TheBuildingGame.getInstance().getGameBackend().getPlayerManager();
+            playerManager.reindexPlayerArenas();
+            playerManager.loadPlayerData(player);
             player.setCurrentGame(null);
             if (state == GameState.IN_PROGRESS) {
                 sendMessage(NoticeMessage.GAME_ENDED_PLAYER_QUIT);

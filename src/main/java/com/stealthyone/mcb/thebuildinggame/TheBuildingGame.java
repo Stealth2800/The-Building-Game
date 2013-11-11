@@ -26,10 +26,7 @@ import com.stealthyone.mcb.stbukkitlib.lib.messages.MessageRetriever;
 import com.stealthyone.mcb.thebuildinggame.backend.GameBackend;
 import com.stealthyone.mcb.thebuildinggame.commands.CmdTheBuildingGame;
 import com.stealthyone.mcb.thebuildinggame.config.ConfigHelper;
-import com.stealthyone.mcb.thebuildinggame.listeners.BlockListener;
-import com.stealthyone.mcb.thebuildinggame.listeners.PlayerListener;
-import com.stealthyone.mcb.thebuildinggame.listeners.SignListener;
-import com.stealthyone.mcb.thebuildinggame.listeners.WeatherListener;
+import com.stealthyone.mcb.thebuildinggame.listeners.*;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -98,6 +95,7 @@ public final class TheBuildingGame extends JavaPlugin implements Autosavable {
         /* Register listeners */
         PluginManager pluginManager = Bukkit.getPluginManager();
         pluginManager.registerEvents(new BlockListener(this), this);
+        pluginManager.registerEvents(new InventoryListener(this), this);
         pluginManager.registerEvents(new PlayerListener(this), this);
         pluginManager.registerEvents(new SignListener(this), this);
         pluginManager.registerEvents(new WeatherListener(this), this);

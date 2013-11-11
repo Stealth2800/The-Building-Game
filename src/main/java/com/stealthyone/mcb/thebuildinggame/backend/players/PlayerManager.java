@@ -70,15 +70,10 @@ public class PlayerManager {
 
     public BgPlayer castPlayer(Player player) {
         String playerName = player.getName().toLowerCase();
-        Log.debug("castPlayer for " + playerName);
         BgPlayer returnPlayer = players.get(playerName);
         if (returnPlayer == null) {
-            Log.debug("loaded players: " + players.keySet().toString());
-            Log.debug("returnPlayer is null, creating new");
             returnPlayer = new BgPlayer(player);
-            Log.debug("loading player");
             players.put(playerName, returnPlayer);
-            Log.debug("players after: " + players.keySet().toString());
         }
         return returnPlayer;
     }
@@ -99,17 +94,9 @@ public class PlayerManager {
     }
 
     public void loadPlayerData(BgPlayer player) {
-        Log.debug("loadPlayerData for: " + player.getName());
         ConfigurationSection config = tempPlayerDataFile.getConfig().getConfigurationSection(player.getName().toLowerCase());
         if (config == null) {
-            Log.debug("config is null");
             return;
-        } else {
-            Log.debug("config isn't null");
-            Log.debug("sections: " + config.getKeys(false).toString());
-            Log.debug("inventory is null: " + (config.get("inventory") == null));
-            Log.debug("inventory is list: " + (config.get("inventory") instanceof List));
-            Log.debug("inventory class: " + config.get("inventory").getClass().getName());
         }
 
         Player rawPlayer = player.getPlayer();
@@ -134,16 +121,10 @@ public class PlayerManager {
         }
 
         if (rawItems != null) {
-            Log.debug("rawItems not null");
             inv.setContents(rawItems);
-        } else {
-            Log.debug("rawItems null");
         }
         if (rawArmor != null) {
-            Log.debug("rawArmor not null");
             inv.setArmorContents(rawArmor);
-        } else {
-            Log.debug("rawArmor null");
         }
 
         rawPlayer.setExp((float) config.getDouble("exp"));
