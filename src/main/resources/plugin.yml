@@ -1,5 +1,5 @@
 name: TheBuildingGame
-version: 1.0
+version: 1.0.1
 description: 'SethBling''s ''The Building Game'' - optimized for Bukkit!'
 depend: [StBukkitLib, WorldEdit, WorldGuard]
 author: Stealth2800
