@@ -97,6 +97,7 @@ public class CmdTheBuildingGame implements CommandExecutor {
                     break;
             }
         }
+        plugin.getHelpManager().handleHelpCommand(sender, null, label, args, 1);
         return true;
     }
 
