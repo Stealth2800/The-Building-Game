@@ -18,6 +18,7 @@
  */
 package com.stealthyone.mcb.thebuildinggame.commands;
 
+import com.stealthyone.mcb.stbukkitlib.lib.updates.UpdateChecker;
 import com.stealthyone.mcb.stbukkitlib.lib.utils.ArrayUtils;
 import com.stealthyone.mcb.stbukkitlib.lib.utils.TimeUtils;
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
@@ -807,13 +808,13 @@ public class CmdTheBuildingGame implements CommandExecutor {
         sender.sendMessage(ChatColor.GREEN + plugin.getName() + ChatColor.GOLD + " v" + plugin.getDescription().getVersion());
         sender.sendMessage(ChatColor.GOLD + "Created by Stealth2800");
         sender.sendMessage(ChatColor.GOLD + "Website: " + ChatColor.AQUA + "http://stealthyone.com/bukkit");
-        /*Updater updateChecker = plugin.getUpdater();
-        if (updateChecker.getResult() == UpdateResult.UPDATE_AVAILABLE) {
+        UpdateChecker updateChecker = plugin.getUpdateChecker();
+        if (updateChecker.checkForUpdates()) {
             String curVer = plugin.getDescription().getVersion();
-            String remVer = updateChecker.getLatestName().replace("v", "");
+            String remVer = updateChecker.getNewVersion().replace("v", "");
             sender.sendMessage(ChatColor.RED + "A different version was found on BukkitDev! (Current: " + curVer + " | Remote: " + remVer + ")");
-            sender.sendMessage(ChatColor.RED + "You can download it from " + updateChecker.getLatestFileLink());
-        }*/
+            sender.sendMessage(ChatColor.RED + "You can download it from " + updateChecker.getVersionLink());
+        }
     }
 
 }
