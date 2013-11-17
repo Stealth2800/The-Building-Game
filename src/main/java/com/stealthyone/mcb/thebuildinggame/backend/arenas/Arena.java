@@ -45,6 +45,19 @@ public class Arena {
         return Integer.parseInt(config.getName());
     }
 
+    public String getNickname() {
+        return config.getString("nickname", null);
+    }
+
+    public boolean setNickname(String newName) {
+        if (newName == null) {
+            return false;
+        } else {
+            config.set("nickname", newName);
+            return true;
+        }
+    }
+
     public GameInstance getGameInstance() {
         return gameInstance;
     }

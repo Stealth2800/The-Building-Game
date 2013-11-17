@@ -50,6 +50,7 @@ public enum ErrorMessage implements IMessagePath {
     GUESS_ALREADY_SUBMITTED,
 
     UNKNOWN_ARENA_SETTING,
+    UNABLE_TO_SET_NICKNAME,
 
     IDEA_ALREADY_SUBMITTED,
 

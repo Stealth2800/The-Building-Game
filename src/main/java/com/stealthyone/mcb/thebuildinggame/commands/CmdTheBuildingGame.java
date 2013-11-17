@@ -255,6 +255,7 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 ErrorMessage.ARENA_DOES_NOT_EXIST.sendTo(sender, Integer.toString(id));
             } else {
                 GameInstance gameInstance = arena.getGameInstance();
+                String nickname = ChatColor.GOLD + "Nickname: " + (arena.getNickname() != null ? arena.getNickname() : "" + ChatColor.RED + ChatColor.ITALIC + "Not set");
                 String enabled = ChatColor.GOLD + "Enabled: " + (arena.isEnabled() ? ChatColor.GREEN + "Yes" : ChatColor.RED + "No");
                 GameState gameStateRaw = gameInstance.getState();
                 String gameState = ChatColor.GOLD + "Game state: " + gameStateRaw.getText();
@@ -273,6 +274,7 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 String signCount = ChatColor.GOLD + "Sign count: " + (signCountNum == -1 ? "" + ChatColor.RED + ChatColor.ITALIC + "No signs" : signCountNum);
 
                 sender.sendMessage(ChatColor.DARK_GRAY + "=====" + ChatColor.GREEN + "The Building Game" + ChatColor.DARK_GRAY + ": " + ChatColor.GOLD + "Arena " + id + ChatColor.DARK_GRAY + "=====");
+                sender.sendMessage(nickname);
                 sender.sendMessage(enabled);
                 sender.sendMessage(maxPlayers);
                 sender.sendMessage(roundTime);
@@ -348,6 +350,14 @@ public class CmdTheBuildingGame implements CommandExecutor {
                         ErrorMessage.INVALID_PLAYER_COUNT.sendTo(sender);
                     } else {
                         NoticeMessage.ARENA_SET_MAXPLAYERS.sendTo(sender, Integer.toString(arenaId), Integer.toString(newCount));
+                    }
+                    return;
+
+                case "nickname":
+                    if (!arena.setNickname(value)) {
+                        ErrorMessage.UNABLE_TO_SET_NICKNAME.sendTo(sender, Integer.toString(arenaId));
+                    } else {
+                        NoticeMessage.ARENA_SET_NICKNAME.sendTo(sender, Integer.toString(arenaId), value);
                     }
                     return;
 

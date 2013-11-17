@@ -8,7 +8,14 @@ arenas:
   modification:
     description: 'Modifying arena settings'
     messages:
-      - '&cWIP'
+      - '&3In order to modify an arena, you must disable it first. You cannot disable arenas if there are players in it.'
+      - '&e/bg arena disable <arena ID> &6&o- Disable arena'
+      - '&e/bg arena enable <arena ID> &6&o- Enable arena'
+      - '&e/bg arena modify <arena ID> <setting> <new value> &6&o- Modify config setting for an arena'
+      - '&3Available settings for arenas:'
+      - '&3- &emaxplayers &6&o- Max players'
+      - '&3- &enickname &6&o- Nickname of arena'
+      - '&3- &eroundtime &6&o- Round time (in seconds)'
 game:
   description: 'Help relating to games'
   commands:
@@ -18,6 +25,11 @@ game:
     - '&e/bg game idea <word/phrase> &6&o- Think of something for players to build.'
     - '&e/bg game leave &6&o- Leave your current game.'
     - '&e/bg game join <arena ID> &6&o- Join a game.'
+  playing:
+    description: 'Help related to playing the game'
+    messages:
+    - '&3In order to play the game, simply join by right clicking a sign or typing &e/bg game join <arena ID>'
+    - '&3Simply follow the instructions on-screen to play the game!'
 debug:
   description: 'Debug commands for development purposes of the plugin'
   messages:

@@ -3,6 +3,7 @@ messages:
     arena_disabled: '&cArena %s is disabled.'
     arena_enabled: '&aArena %s is enabled.'
     arena_set_maxplayers: '&aSet max players for arena %s to %s.'
+    arena_set_nickname: '&aSet nickname for arena %s to %s.'
     arena_set_roundtime: '&aSet round time for arena %s to %s.'
     build_notice: '&aYou''re building: ''&6%s&a'''
     created_arena: '&aCreated arena successfully. New arena ID: &6%s'
@@ -61,3 +62,4 @@ messages:
     players_in_arena: '&cYou cannot disable this arena as there are players in it.'
     unknown_command: '{TAG}&cUnknown command. Type &4/%s help &cfor help.'
     unknown_arena_setting: '{TAG}&cUnknown arena setting: &4%s'
+    unable_to_set_nickname: '&cUnable to set nickname for arena %s.'
