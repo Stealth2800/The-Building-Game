@@ -257,7 +257,7 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 ErrorMessage.ARENA_DOES_NOT_EXIST.sendTo(sender, Integer.toString(id));
             } else {
                 GameInstance gameInstance = arena.getGameInstance();
-                String nickname = ChatColor.GOLD + "Nickname: " + (arena.getNickname() != null ? arena.getNickname() : "" + ChatColor.RED + ChatColor.ITALIC + "Not set");
+                String nickname = ChatColor.GOLD + "Nickname: " + (arena.getNickname() != null ? ChatColor.YELLOW + arena.getNickname() : "" + ChatColor.RED + ChatColor.ITALIC + "Not set");
                 String enabled = ChatColor.GOLD + "Enabled: " + (arena.isEnabled() ? ChatColor.GREEN + "Yes" : ChatColor.RED + "No");
                 GameState gameStateRaw = gameInstance.getState();
                 String gameState = ChatColor.GOLD + "Game state: " + gameStateRaw.getText();
@@ -268,14 +268,14 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 int roundTimeSec = arena.getRoundTime();
                 String roundTime = ChatColor.GOLD + "Round time: " + ChatColor.YELLOW + TimeUtils.translateSeconds(roundTimeSec) + ChatColor.DARK_GRAY + " (" + roundTimeSec + " seconds)";
                 boolean timeResultsRoundRaw = arena.timeResultsRound();
-                String timeResultsRound = ChatColor.GOLD + "Time results round: " + (timeResultsRoundRaw ? ChatColor.GREEN : ChatColor.RED) + timeResultsRoundRaw;
+                String timeResultsRound = ChatColor.GOLD + "Time results round: " + (timeResultsRoundRaw ? ChatColor.GREEN + "True" : ChatColor.RED + "False");
                 int signCountNum;
                 try {
                     signCountNum = gameBackend.getSignManager().getSigns(arena).size();
                 } catch (NullPointerException ex) {
                     signCountNum = -1;
                 }
-                String signCount = ChatColor.GOLD + "Sign count: " + (signCountNum == -1 ? "" + ChatColor.RED + ChatColor.ITALIC + "No signs" : signCountNum);
+                String signCount = ChatColor.GOLD + "Sign count: " + (signCountNum == -1 ? "" + ChatColor.RED + ChatColor.ITALIC + "No signs" : "" + ChatColor.YELLOW + signCountNum);
 
                 sender.sendMessage(ChatColor.DARK_GRAY + "=====" + ChatColor.GREEN + "The Building Game" + ChatColor.DARK_GRAY + ": " + ChatColor.GOLD + "Arena " + id + ChatColor.DARK_GRAY + "=====");
                 sender.sendMessage(nickname);
