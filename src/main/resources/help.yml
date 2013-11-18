@@ -16,6 +16,7 @@ arenas:
       - '&3- &emaxplayers &6&o- Max players'
       - '&3- &enickname &6&o- Nickname of arena'
       - '&3- &eroundtime &6&o- Round time (in seconds)'
+      - '&3- &etimeresultsround &6&o- Whether or not to time the results (last) round'
 game:
   description: 'Help relating to games'
   commands:
@@ -25,6 +26,7 @@ game:
     - '&e/bg game idea <word/phrase> &6&o- Think of something for players to build.'
     - '&e/bg game leave &6&o- Leave your current game.'
     - '&e/bg game join <arena ID> &6&o- Join a game.'
+    - '&e/bg game end <arena ID> -&6&o - Forcibly end a game.'
   playing:
     description: 'Help related to playing the game'
     messages:

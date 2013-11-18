@@ -52,14 +52,12 @@ public abstract class Round {
         Map<Integer, BgPlayer> players = gameInstance.getPlayerIds();
         int playerCount = players.size();
         List<Room> rooms = gameInstance.getRooms(this);
-        RoomManager roomManager = TheBuildingGame.getInstance().getGameBackend().getRoomManager();
         for (int i = 1; i <= playerCount; i++) {
             Log.debug("allocation, i: " + i);
             int roomNum = (i + roundNum) - 1;
             while (roomNum > playerCount) roomNum -= playerCount;
             BgPlayer player = players.get(i);
             Room room = rooms.get(roomNum - 1);
-            //room.setInUse(true);
             roomAllocation.put(player, room);
         }
     }
@@ -92,13 +90,20 @@ public abstract class Round {
     public void startRound() {
         RoomManager roomManager = TheBuildingGame.getInstance().getGameBackend().getRoomManager();
         for (Entry<BgPlayer, Room> entry : roomAllocation.entrySet()) {
+            entry.getKey().getPlayer().getInventory().clear();
             Room room = entry.getValue();
-            roomManager.setRoomRegionOwner(room.getX(), room.getZ(), (this instanceof RoundBuild) ? entry.getKey() : null);
+            roomManager.setRoomRegionOwner(room.getX(), room.getZ(), (this instanceof RoundBuild && !(this instanceof RoundResults)) ? entry.getKey() : null);
         }
     }
 
     public abstract void sendStartingMessage();
 
-    public abstract void endRound();
+    public void endRound() {
+        RoomManager roomManager = TheBuildingGame.getInstance().getGameBackend().getRoomManager();
+        for (Entry<BgPlayer, Room> entry : roomAllocation.entrySet()) {
+            Room room = entry.getValue();
+            roomManager.setRoomRegionOwner(room.getX(), room.getZ(), null);
+        }
+    }
 
 }

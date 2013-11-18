@@ -62,7 +62,4 @@ public class RoundThink extends Round {
         gameInstance.sendMessage(NoticeMessage.START_MESSAGE_THINK);
     }
 
-    @Override
-    public void endRound() {}
-
 }

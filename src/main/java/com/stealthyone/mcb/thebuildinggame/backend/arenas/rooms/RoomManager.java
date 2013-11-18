@@ -283,6 +283,7 @@ public class RoomManager {
     }
 
     public void setRoomRegionOwner(int x, int z, BgPlayer player) {
+        Log.debug("setting room region owner of room: " + x + ", " + z + " to " + (player == null ? "none" : player.getName()));
         ProtectedRegion region = createRegion(x, z);
         if (region != null) {
             DefaultDomain domain = new DefaultDomain();

@@ -61,12 +61,4 @@ public class RoundGuess extends Round {
         gameInstance.sendMessage(NoticeMessage.START_MESSAGE_GUESS);
     }
 
-    @Override
-    public void endRound() {
-        /*RoundBuild prevRound = (RoundBuild) gameInstance.getRound(roundNum - 1);
-        for (BgPlayer player : gameInstance.getPlayerIds().values()) {
-            ((RoundResults) gameInstance.getRound(gameInstance.getPlayerCount() + 1)).addResult(prevRound.getLastIdeaPlayer(prevRound.getLastIdeaPlayer(player)), NoticeMessage.RESULTS_GUESS.getMessage(player.getName(), guesses.get(player)));
-        }*/
-    }
-
 }

@@ -559,6 +559,8 @@ public class CmdTheBuildingGame implements CommandExecutor {
         if (!PermissionNode.ADMIN_GAME_END.isAllowed(sender)) {
             ErrorMessage.NO_PERMISSION.sendTo(sender);
         } else if (args.length < 3) {
+            UsageMessage.GAME_END.sendTo(sender, label);
+        } else {
             int arenaId;
             try {
                 arenaId = Integer.parseInt(args[2]);

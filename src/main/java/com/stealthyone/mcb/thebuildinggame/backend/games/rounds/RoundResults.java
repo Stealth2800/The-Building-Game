@@ -117,7 +117,4 @@ public class RoundResults extends RoundBuild {
         indexResults();
     }
 
-    @Override
-    public void endRound() {}
-
 }

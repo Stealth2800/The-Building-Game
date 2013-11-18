@@ -28,6 +28,7 @@ public enum UsageMessage {
     ARENA_INFO("/%s arena info <arena ID>"),
 
     GAME_GUESS("/%s game guess <guess word/phrase>"),
+    GAME_END("/%s game end <arena ID>"),
     GAME_IDEA("/%s game idea <idea word/phrase>"),
     GAME_JOIN("/%s game join <arena ID"),
     GAME_RESULTS("/%s game results <result number>"),

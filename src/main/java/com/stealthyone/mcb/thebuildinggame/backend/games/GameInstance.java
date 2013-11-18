@@ -112,7 +112,7 @@ public class GameInstance {
             if (roundTime >= 0) {
                 if (state == GameState.IN_PROGRESS) {
                     Round curRound = getCurrentRound();
-                    if (!((curRound instanceof RoundResults && arena.timeResultsRound()) || curRound instanceof RoundBuild)) roundTime++;
+                    if (!(curRound instanceof RoundBuild) || (curRound instanceof RoundResults && !arena.timeResultsRound())) roundTime++;
                 }
                 roundTime--;
                 time.setScore(roundTime);
@@ -231,8 +231,10 @@ public class GameInstance {
         int i = 1;
         for (BgPlayer player : players.values()) {
             playerManager.savePlayerData(player);
-            player.getPlayer().getInventory().clear();
-            player.getPlayer().setGameMode(GameMode.CREATIVE);
+            Player rawPlayer = player.getPlayer();
+            rawPlayer.getInventory().clear();
+            rawPlayer.setGameMode(GameMode.CREATIVE);
+            rawPlayer.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
             playerIds.put(i, player);
             i++;
         }
