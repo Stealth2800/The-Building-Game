@@ -32,6 +32,7 @@ public enum NoticeMessage implements IMessagePath {
     ARENA_SET_MAXPLAYERS,
     ARENA_SET_NICKNAME,
     ARENA_SET_ROUNDTIME,
+    ARENA_SET_TIMERESULTSROUND,
 
     BUILD_NOTICE,
 

@@ -20,6 +20,7 @@ package com.stealthyone.mcb.thebuildinggame.commands;
 
 import com.stealthyone.mcb.stbukkitlib.lib.updates.UpdateChecker;
 import com.stealthyone.mcb.stbukkitlib.lib.utils.ArrayUtils;
+import com.stealthyone.mcb.stbukkitlib.lib.utils.InputUtils;
 import com.stealthyone.mcb.stbukkitlib.lib.utils.TimeUtils;
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame.Log;
@@ -365,6 +366,21 @@ public class CmdTheBuildingGame implements CommandExecutor {
                     }
                     return;
 
+                case "timeresultsround":
+                    boolean newValue;
+                    try {
+                        newValue = InputUtils.getInputBoolean(value);
+                    } catch (IllegalArgumentException ex) {
+                        ErrorMessage.INVALID_BOOLEAN.sendTo(sender);
+                        return;
+                    }
+                    if (!arena.setTimeResultsRound(newValue)) {
+                        ErrorMessage.VALUE_ALREADY_SET.sendTo(sender);
+                    } else {
+                        NoticeMessage.ARENA_SET_TIMERESULTSROUND.sendTo(sender, Integer.toString(arenaId), Boolean.toString(newValue));
+                    }
+                    return;
+
                 case "roundtime":
                     int newTime;
                     try {
@@ -478,7 +494,7 @@ public class CmdTheBuildingGame implements CommandExecutor {
      * @param sender
      * @param command
      * @param label
-     * @pardeb ugam args
+     * @param args
      */
     private void cmdGame(CommandSender sender, Command command, String label, String[] args) {
         if (args.length > 1) {

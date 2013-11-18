@@ -45,6 +45,8 @@ public enum ErrorMessage implements IMessagePath {
     CANNOT_MARK_READY,
     GAME_CANNOT_PLACE_SIGN,
 
+    INVALID_BOOLEAN,
+
     NOT_GUESSING_ROUND,
     NOT_RESULTS_ROUND,
     GUESS_ALREADY_SUBMITTED,
@@ -65,6 +67,7 @@ public enum ErrorMessage implements IMessagePath {
     MUST_BE_INT,
 	MUST_BE_PLAYER,
 	NO_PERMISSION,
+    VALUE_ALREADY_SET,
     UNKNOWN_COMMAND;
 	
 	private final String PREFIX = "messages.errors.";
