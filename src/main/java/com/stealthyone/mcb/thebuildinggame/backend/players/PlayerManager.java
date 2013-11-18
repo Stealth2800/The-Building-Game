@@ -22,6 +22,7 @@ import com.stealthyone.mcb.stbukkitlib.lib.storage.InventoryIO;
 import com.stealthyone.mcb.stbukkitlib.lib.storage.YamlFileManager;
 import com.stealthyone.mcb.stbukkitlib.lib.utils.ConfigUtils;
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
+import com.stealthyone.mcb.thebuildinggame.TheBuildingGame.Log;
 import com.stealthyone.mcb.thebuildinggame.backend.GameBackend;
 import com.stealthyone.mcb.thebuildinggame.backend.arenas.Arena;
 import org.bukkit.GameMode;
@@ -33,10 +34,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 public class PlayerManager {
@@ -139,11 +137,10 @@ public class PlayerManager {
     public void reindexPlayerArenas() {
         playerArenaIndex.clear();
         Iterator<Entry<String, BgPlayer>> it = players.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<String, BgPlayer> next = it.next();
-            BgPlayer player = next.getValue();
+        List<BgPlayer> playersToRemove = new ArrayList<BgPlayer>();
+        for (BgPlayer player : players.values()) {
             if (!player.isOnline()) {
-                unloadPlayer(player.getOfflinePlayer());
+                playersToRemove.add(player);
             } else {
                 try {
                     playerArenaIndex.put(player, player.getCurrentGame().getArena());
@@ -151,6 +148,10 @@ public class PlayerManager {
                     playerArenaIndex.put(player, null);
                 }
             }
+        }
+        for (BgPlayer player : playersToRemove) {
+            Log.debug("Unloading offline players");
+            unloadPlayer(player.getOfflinePlayer());
         }
     }
 
