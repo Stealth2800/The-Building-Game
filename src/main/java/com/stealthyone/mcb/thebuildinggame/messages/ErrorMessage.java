@@ -49,6 +49,8 @@ public enum ErrorMessage implements IMessagePath {
     NOT_RESULTS_ROUND,
     GUESS_ALREADY_SUBMITTED,
 
+    NO_GAME_IN_PROGRESS,
+
     UNKNOWN_ARENA_SETTING,
     UNABLE_TO_SET_NICKNAME,
 

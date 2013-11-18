@@ -112,7 +112,7 @@ public class GameInstance {
             if (roundTime >= 0) {
                 if (state == GameState.IN_PROGRESS) {
                     Round curRound = getCurrentRound();
-                    if (!(curRound instanceof RoundResults || curRound instanceof RoundBuild)) roundTime++;
+                    if (!((curRound instanceof RoundResults && arena.timeResultsRound()) || curRound instanceof RoundBuild)) roundTime++;
                 }
                 roundTime--;
                 time.setScore(roundTime);
@@ -243,8 +243,6 @@ public class GameInstance {
             Log.debug("setting up rounds");
             int playerCount = getPlayerCount();
             RoomManager roomManager = TheBuildingGame.getInstance().getGameBackend().getRoomManager();
-            /*int roomCount = new Double((0.5D * Math.pow(playerCount, 2)) - 0.5D * playerCount).intValue();
-            List<Room> tempRooms = new ArrayList<Room>(roomManager.getNextRooms(roomCount));*/
             for (int i = 1; i <= playerCount + 1; i++) {
                 Log.debug("i: " + i);
                 if (i == 1) {

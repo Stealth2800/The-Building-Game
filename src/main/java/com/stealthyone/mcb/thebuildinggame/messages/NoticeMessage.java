@@ -37,6 +37,8 @@ public enum NoticeMessage implements IMessagePath {
 
     CREATED_ARENA,
 
+    ENDED_GAME,
+
     SUBMITTED_GUESS,
     SUBMITTED_IDEA,
 

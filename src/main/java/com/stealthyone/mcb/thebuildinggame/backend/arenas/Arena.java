@@ -63,7 +63,7 @@ public class Arena {
     }
 
     public int getMaxPlayers() {
-        return config.getInt("maxPlayers");
+        return config.getInt("maxPlayers", 7);
     }
 
     public boolean setMaxPlayers(int newValue) {
@@ -76,7 +76,7 @@ public class Arena {
     }
 
     public int getRoundTime() {
-        return config.getInt("roundTime");
+        return config.getInt("roundTime", 300);
     }
 
     public void setRoundTime(int newValue) {
@@ -84,7 +84,7 @@ public class Arena {
     }
 
     public boolean isEnabled() {
-        return config.getBoolean("enabled");
+        return config.getBoolean("enabled", false);
     }
 
     public boolean setEnabled(boolean newValue) {
@@ -109,13 +109,25 @@ public class Arena {
     }
 
     public boolean isChatEnabled() {
-        return config.getBoolean("chatEnabled");
+        return config.getBoolean("chatEnabled", true);
     }
 
     public void setChatEnabled(boolean newValue) {
         if (isChatEnabled() != newValue) {
             config.set("chatEnabled", newValue);
         }
+    }
+
+    public boolean timeResultsRound() {
+        return config.getBoolean("timeResultsRound", true);
+    }
+
+    public boolean setTimeResultsRound(boolean newValue) {
+        if (timeResultsRound() != newValue) {
+            config.set("timeResultsRound", newValue);
+            return true;
+        }
+        return false;
     }
 
     public void updateSigns() {

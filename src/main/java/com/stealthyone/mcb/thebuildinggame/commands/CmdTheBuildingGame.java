@@ -266,6 +266,8 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 String chatEnabled = ChatColor.GOLD + "Chat enabled: " + (chatEnabledRaw ? ChatColor.GREEN + "True" : ChatColor.RED + "False");
                 int roundTimeSec = arena.getRoundTime();
                 String roundTime = ChatColor.GOLD + "Round time: " + ChatColor.YELLOW + TimeUtils.translateSeconds(roundTimeSec) + ChatColor.DARK_GRAY + " (" + roundTimeSec + " seconds)";
+                boolean timeResultsRoundRaw = arena.timeResultsRound();
+                String timeResultsRound = ChatColor.GOLD + "Time results round: " + (timeResultsRoundRaw ? ChatColor.GREEN : ChatColor.RED) + timeResultsRoundRaw;
                 int signCountNum;
                 try {
                     signCountNum = gameBackend.getSignManager().getSigns(arena).size();
@@ -279,6 +281,7 @@ public class CmdTheBuildingGame implements CommandExecutor {
                 sender.sendMessage(enabled);
                 sender.sendMessage(maxPlayers);
                 sender.sendMessage(roundTime);
+                sender.sendMessage(timeResultsRound);
                 sender.sendMessage(chatEnabled);
                 sender.sendMessage(signCount);
                 sender.sendMessage(gameState);
@@ -480,6 +483,11 @@ public class CmdTheBuildingGame implements CommandExecutor {
     private void cmdGame(CommandSender sender, Command command, String label, String[] args) {
         if (args.length > 1) {
             switch (args[1]) {
+                /* End game command */
+                case "end":
+                    cmdGame_End(sender, command, label, args);
+                    return;
+
                 /* Guess command */
                 case "guess":
                     cmdGame_Guess(sender, command, label, args);
@@ -526,6 +534,35 @@ public class CmdTheBuildingGame implements CommandExecutor {
             }
         }
         plugin.getHelpManager().handleHelpCommand(sender, "game", label, args, 1);
+    }
+
+    /*
+     * Game end command
+     */
+    private void cmdGame_End(CommandSender sender, Command command, String label, String[] args) {
+        if (!PermissionNode.ADMIN_GAME_END.isAllowed(sender)) {
+            ErrorMessage.NO_PERMISSION.sendTo(sender);
+        } else if (args.length < 3) {
+            int arenaId;
+            try {
+                arenaId = Integer.parseInt(args[2]);
+            } catch (NumberFormatException ex) {
+                ErrorMessage.MUST_BE_INT.sendTo(sender, "Arena ID");
+                return;
+            }
+            Arena arena = plugin.getGameBackend().getArenaManager().getArena(arenaId);
+            if (arena == null) {
+                ErrorMessage.ARENA_DOES_NOT_EXIST.sendTo(sender, Integer.toString(arenaId));
+            } else {
+                GameInstance gameInstance = arena.getGameInstance();
+                if (gameInstance.getState() != GameState.IN_PROGRESS) {
+                    ErrorMessage.NO_GAME_IN_PROGRESS.sendTo(sender);
+                } else {
+                    gameInstance.endGame();
+                    NoticeMessage.ENDED_GAME.sendTo(sender);
+                }
+            }
+        }
     }
 
     /*
@@ -636,12 +673,10 @@ public class CmdTheBuildingGame implements CommandExecutor {
             BgPlayer player = plugin.getGameBackend().getPlayerManager().castPlayer((Player) sender);
             GameInstance game = player.getCurrentGame();
             if (game != null) {
-                Log.debug("game is null");
                 //Add verification message
                 game.removePlayer(player);
                 NoticeMessage.LEFT_GAME.sendTo(sender);
             } else {
-                Log.debug("game not null");
                 ErrorMessage.NOT_IN_ANY_GAME.sendTo(sender);
             }
         }
