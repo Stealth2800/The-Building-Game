@@ -1,7 +1,7 @@
 /*
- *               The Building Game - Bukkit Plugin
- * Copyright (C) 2013 Stealth2800 <stealth2800@stealthyone.com>
- *               Website: <http://stealthyone.com>
+ * The Building Game - Bukkit Plugin
+ * Copyright (C) 2014 Stealth2800 <stealth2800@stealthyone.com>
+ * Website: <http://stealthyone.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,75 +18,69 @@
  */
 package com.stealthyone.mcb.thebuildinggame.backend.arenas;
 
-import com.stealthyone.mcb.stbukkitlib.lib.storage.YamlFileManager;
+import com.stealthyone.mcb.stbukkitlib.storage.YamlFileManager;
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
-import com.stealthyone.mcb.thebuildinggame.TheBuildingGame.Log;
-import com.stealthyone.mcb.thebuildinggame.backend.GameBackend;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
+/*
+ * The arena manager is in charge of tracking arenas.
+ * Arenas contain the configuration for every individual Building Game type, such as the max amount of players, etc.
+ */
 public class ArenaManager {
 
     private TheBuildingGame plugin;
-    private GameBackend gameBackend;
 
-    private YamlFileManager arenaFile;
-    private Map<Integer, Arena> loadedArenas = new HashMap<Integer, Arena>();
+    private File arenaDir;
+    private Map<Integer, Arena> loadedArenas = new HashMap<>();
 
-    public ArenaManager(TheBuildingGame plugin, GameBackend gameBackend) {
+    public ArenaManager(TheBuildingGame plugin) {
         this.plugin = plugin;
-        this.gameBackend = gameBackend;
-        this.arenaFile = new YamlFileManager(plugin.getDataFolder() + File.separator + "arenas.yml");
-        Log.info("Loaded " + reloadArenas() + " arenas.");
+        arenaDir = new File(plugin.getDataFolder() + File.separator + "data" + File.separator + "arenas");
+        arenaDir.mkdir();
     }
 
-    public void save() {
-        arenaFile.saveFile();
-    }
-
-    public Map<Integer, Arena> getArenas() {
-        return loadedArenas;
-    }
-
-    public int reloadArenas() {
+    public int reload() {
         loadedArenas.clear();
-        FileConfiguration arenaConfig = arenaFile.getConfig();
-        for (String key : arenaConfig.getKeys(false)) {
-            loadArena(arenaConfig.getConfigurationSection(key));
+        for (File rawFile : arenaDir.listFiles()) {
+            if (rawFile.getName().matches("arena[0-9]+.yml")) {
+                YamlFileManager file = new YamlFileManager(rawFile);
+                int id;
+                try {
+                    id = Integer.parseInt(rawFile.getName().replace(".yml", "").replace("arena", ""));
+                } catch (Exception ex) {
+                    plugin.getLogger().severe("Invalid arena file '" + rawFile.getName() + "' found. I was unable to load any data from it.");
+                    continue;
+                }
+                Arena arena = new Arena(id, file);
+                loadedArenas.put(id, arena);
+            }
         }
         return loadedArenas.size();
     }
 
-    public void loadArena(ConfigurationSection config) {
-        Arena arena = new Arena(config);
-        loadedArenas.put(arena.getId(), arena);
+    public Arena getArena(int id) {
+        return loadedArenas.get(id);
     }
 
-    public Arena createArena() {
-        int id = getNextId();
-        ConfigurationSection config = arenaFile.getConfig().createSection(Integer.toString(id));
-        config.set("enabled", true);
-        config.set("maxPlayers", 7);
-        config.set("roundTime", 300);
-        loadArena(config);
-        return getArena(id);
-    }
-
-    public int getNextId() {
-        FileConfiguration arenaConfig = arenaFile.getConfig();
-        int i = 1;
-        while (arenaConfig.getConfigurationSection(Integer.toString(i)) != null) {
-            i++;
-        }
-        return i;
-    }
-
-    public Arena getArena(int arenaId) {
-        return loadedArenas.get(arenaId);
+    public List<Arena> getLoadedArenas() {
+        List<Arena> newList = new ArrayList<>(loadedArenas.values());
+        Collections.sort(newList, new Comparator<Arena>() {
+            @Override
+            public int compare(Arena o1, Arena o2) {
+                int id1 = o1.getId();
+                int id2 = o2.getId();
+                if (id1 > id2) {
+                    return 1;
+                } else if (id1 < id2) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        });
+        return newList;
     }
 
 }

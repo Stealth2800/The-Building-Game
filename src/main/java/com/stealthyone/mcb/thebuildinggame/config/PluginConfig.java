@@ -1,7 +1,7 @@
 /*
- *               The Building Game - Bukkit Plugin
- * Copyright (C) 2013 Stealth2800 <stealth2800@stealthyone.com>
- *               Website: <http://stealthyone.com>
+ * The Building Game - Bukkit Plugin
+ * Copyright (C) 2014 Stealth2800 <stealth2800@stealthyone.com>
+ * Website: <http://stealthyone.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,10 @@
  */
 package com.stealthyone.mcb.thebuildinggame.config;
 
-import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
+public class PluginConfig {
 
-public enum ConfigString {
+    private PluginConfig() { }
 
-    NAME_ROOM_WORLD("Room world name");
-
-    private String path;
-
-    private ConfigString(String path) {
-        this.path = path;
-    }
-
-    public final String getString() {
-        return TheBuildingGame.getInstance().getConfig().getString(path);
-    }
+    public static PluginConfigOption<String> ARENAS_WORLD_NAME = new PluginConfigOption<>("Arenas.World name", "world_bgrooms");
 
 }

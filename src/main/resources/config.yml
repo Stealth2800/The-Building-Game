@@ -1,4 +1,5 @@
 Debug: false
 Check for updates: true
 Autosave interval: 10
-Room world name: world_bgrooms
+Arenas:
+  World name: 'world_bgrooms'

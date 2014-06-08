@@ -1,7 +1,7 @@
 /*
- *               The Building Game - Bukkit Plugin
- * Copyright (C) 2013 Stealth2800 <stealth2800@stealthyone.com>
- *               Website: <http://stealthyone.com>
+ * The Building Game - Bukkit Plugin
+ * Copyright (C) 2014 Stealth2800 <stealth2800@stealthyone.com>
+ * Website: <http://stealthyone.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,22 @@
 package com.stealthyone.mcb.thebuildinggame.config;
 
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
+import com.stealthyone.mcb.thebuildinggame.util.ConfigOption;
+import org.bukkit.configuration.ConfigurationSection;
 
-public enum ConfigBoolean {
+public class PluginConfigOption<T> extends ConfigOption<T> {
 
-	CHECK_FOR_UPDATES("Check for updates"),
-	DEBUG("Debug");
-	
-	private String path;
-	
-	private ConfigBoolean(String path) {
-		this.path = path;
-	}
-	
-	public final boolean getBoolean() {
-		return TheBuildingGame.getInstance().getConfig().getBoolean(path);
-	}
-	
+    public PluginConfigOption(String name, T def) {
+        super(name, def);
+    }
+
+    public T load() {
+        return super.load(TheBuildingGame.getInstance().getConfig());
+    }
+
+    @Override
+    public void save(ConfigurationSection config) {
+        super.save(TheBuildingGame.getInstance().getConfig());
+    }
+
 }

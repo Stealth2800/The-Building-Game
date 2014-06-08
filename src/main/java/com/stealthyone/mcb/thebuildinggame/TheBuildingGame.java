@@ -1,7 +1,7 @@
 /*
- *               The Building Game - Bukkit Plugin
- * Copyright (C) 2013 Stealth2800 <stealth2800@stealthyone.com>
- *               Website: <http://stealthyone.com>
+ * The Building Game - Bukkit Plugin
+ * Copyright (C) 2014 Stealth2800 <stealth2800@stealthyone.com>
+ * Website: <http://stealthyone.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,67 +18,37 @@
  */
 package com.stealthyone.mcb.thebuildinggame;
 
-import com.stealthyone.mcb.stbukkitlib.lib.autosaving.Autosavable;
-import com.stealthyone.mcb.stbukkitlib.lib.autosaving.AutosavingAPI;
-import com.stealthyone.mcb.stbukkitlib.lib.help.HelpAPI;
-import com.stealthyone.mcb.stbukkitlib.lib.help.HelpManager;
-import com.stealthyone.mcb.stbukkitlib.lib.messages.MessageRetriever;
-import com.stealthyone.mcb.stbukkitlib.lib.updates.UpdateChecker;
-import com.stealthyone.mcb.thebuildinggame.backend.GameBackend;
+import com.stealthyone.mcb.stbukkitlib.messages.MessageManager;
+import com.stealthyone.mcb.thebuildinggame.backend.arenas.ArenaManager;
+import com.stealthyone.mcb.thebuildinggame.backend.games.GameManager;
+import com.stealthyone.mcb.thebuildinggame.backend.rooms.RoomManager;
 import com.stealthyone.mcb.thebuildinggame.commands.CmdTheBuildingGame;
-import com.stealthyone.mcb.thebuildinggame.config.ConfigHelper;
-import com.stealthyone.mcb.thebuildinggame.listeners.*;
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.PluginManager;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.File;
 
-public final class TheBuildingGame extends JavaPlugin implements Autosavable {
-
-    public final static class Log {
-
-        public final static void debug(String msg) {
-            if (ConfigHelper.DEBUG.getBoolean())
-                instance.logger.log(Level.INFO, String.format("[%s DEBUG] %s", instance.getName(), msg));
-        }
-
-        public final static void info(String msg) {
-            instance.logger.log(Level.INFO, String.format("[%s] %s", instance.getName(), msg));
-        }
-
-        public final static void warning(String msg) {
-            instance.logger.log(Level.WARNING, String.format("[%s] %s", instance.getName(), msg));
-        }
-
-        public final static void severe(String msg) {
-            instance.logger.log(Level.SEVERE, String.format("[%s] %s", instance.getName(), msg));
-        }
-
-    }
+public final class TheBuildingGame extends JavaPlugin {
 
     private static TheBuildingGame instance;
     {
         instance = this;
     }
 
-    public final static TheBuildingGame getInstance() {
+    public static TheBuildingGame getInstance() {
         return instance;
     }
 
-    private Logger logger;
+    private MessageManager messageManager;
 
-    private HelpManager helpManager;
-    private MessageRetriever messageManager;
-    private UpdateChecker updateChecker;
-
-    private GameBackend gameBackend;
+    private ArenaManager arenaManager;
+    private GameManager gameManager;
+    private RoomManager roomManager;
 
     @Override
     public final void onLoad() {
-        logger = getServer().getLogger();
         getDataFolder().mkdir();
+        new File(getDataFolder() + File.separator + "data").mkdir();
     }
 
     @Override
@@ -88,53 +58,52 @@ public final class TheBuildingGame extends JavaPlugin implements Autosavable {
         getConfig().options().copyDefaults(false);
         saveConfig();
 
-        /* Setup important plugin parts */
-        helpManager = HelpAPI.registerHelp(this);
-        messageManager = new MessageRetriever(this);
+        messageManager = new MessageManager(this);
 
-        gameBackend = new GameBackend(this);
+        arenaManager = new ArenaManager(this);
+        gameManager = new GameManager(this);
+        roomManager = new RoomManager(this);
 
-        /* Register listeners */
-        PluginManager pluginManager = Bukkit.getPluginManager();
-        pluginManager.registerEvents(new BlockListener(this), this);
-        pluginManager.registerEvents(new InventoryListener(this), this);
-        pluginManager.registerEvents(new PlayerListener(this), this);
-        pluginManager.registerEvents(new SignListener(this), this);
-        pluginManager.registerEvents(new WeatherListener(this), this);
+        getLogger().info("Loaded " + arenaManager.reload() + " arenas.");
 
-        /* Register commands */
         getCommand("thebuildinggame").setExecutor(new CmdTheBuildingGame(this));
 
-        AutosavingAPI.registerAutosavable(this, "main", this, ConfigHelper.AUTOSAVE_INTERVAL.getInt() * 60);
-        updateChecker = UpdateChecker.scheduleForMe(this, 68583);
-        Log.info("TheBuildingGame v" + getDescription().getVersion() + " by Stealth2800 enabled!");
+        //updateChecker = UpdateChecker.scheduleForMe(this, 68583);
+        getLogger().info("TheBuildingGame v" + getDescription().getVersion() + " by Stealth2800 enabled!");
     }
 
     @Override
     public final void onDisable() {
         saveAll();
-        Log.info("TheBuildingGame v" + getDescription().getVersion() + " by Stealth2800 disabled!");
+        getLogger().info("TheBuildingGame v" + getDescription().getVersion() + " by Stealth2800 disabled!");
     }
 
-    @Override
+    public final void reloadAll() {
+        try {
+            roomManager.reload();
+        } catch (InvalidConfigurationException ex) {
+            getLogger().severe("An error occurred while reloading the plugin's configuration: " + ex.getMessage());
+        }
+    }
+
     public final void saveAll() {
-        gameBackend.saveAll();
+
     }
 
-    public HelpManager getHelpManager() {
-        return helpManager;
-    }
-
-    public MessageRetriever getMessageManager() {
+    public MessageManager getMessageManager() {
         return messageManager;
     }
 
-    public UpdateChecker getUpdateChecker() {
-        return updateChecker;
+    public ArenaManager getArenaManager() {
+        return arenaManager;
     }
 
-    public GameBackend getGameBackend() {
-        return gameBackend;
+    public GameManager getGameManager() {
+        return gameManager;
+    }
+
+    public RoomManager getRoomManager() {
+        return roomManager;
     }
 
 }

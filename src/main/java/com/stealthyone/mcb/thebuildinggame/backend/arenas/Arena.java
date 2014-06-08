@@ -1,7 +1,7 @@
 /*
- *               The Building Game - Bukkit Plugin
- * Copyright (C) 2013 Stealth2800 <stealth2800@stealthyone.com>
- *               Website: <http://stealthyone.com>
+ * The Building Game - Bukkit Plugin
+ * Copyright (C) 2014 Stealth2800 <stealth2800@stealthyone.com>
+ * Website: <http://stealthyone.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,122 +18,174 @@
  */
 package com.stealthyone.mcb.thebuildinggame.backend.arenas;
 
-import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
-import com.stealthyone.mcb.thebuildinggame.backend.arenas.exceptions.InvalidArenaException;
-import com.stealthyone.mcb.thebuildinggame.backend.arenas.exceptions.PlayersInArenaException;
-import com.stealthyone.mcb.thebuildinggame.backend.games.GameInstance;
-import com.stealthyone.mcb.thebuildinggame.backend.games.GameState;
+import com.stealthyone.mcb.stbukkitlib.storage.YamlFileManager;
+import com.stealthyone.mcb.stbukkitlib.utils.QuickHashMap;
+import com.stealthyone.mcb.thebuildinggame.util.ConfigOption;
 import org.bukkit.configuration.ConfigurationSection;
+
+import java.util.*;
 
 public class Arena {
 
-    private ConfigurationSection config;
-    private GameInstance gameInstance;
+    private YamlFileManager file;
 
-    public Arena(ConfigurationSection config) {
-        this.config = config;
-        gameInstance = new GameInstance(this);
-        gameInstance.setState(isEnabled() ? GameState.WAITING : GameState.INACTIVE);
-    }
+    private int id;
 
-    @Override
-    public boolean equals(Object object) {
-        return object instanceof Arena && ((Arena) object).getId() == getId();
+    private Map<String, ConfigOption> configOptions = Collections.unmodifiableMap(new QuickHashMap<String, ConfigOption>()
+                    .put(ArenaConfig.NICKNAME, new ConfigOption<>(ArenaConfig.NICKNAME, (String) null))
+                    .put(ArenaConfig.ENABLED, new ConfigOption<>(ArenaConfig.ENABLED, false))
+                    .put(ArenaConfig.MAX_PLAYERS, new ConfigOption<>(ArenaConfig.MAX_PLAYERS, 7))
+                    .put(ArenaConfig.ROOM_TYPE, new ConfigOption<>(ArenaConfig.ROOM_TYPE, -1))
+                    .put(ArenaConfig.ROOM_SPACING, new ConfigOption<>(ArenaConfig.ROOM_SPACING, 1))
+                    .put(ArenaConfig.CHAT_ENABLED, new ConfigOption<>(ArenaConfig.CHAT_ENABLED, true))
+                    .put(ArenaConfig.TIME_RESULTS_ROUND, new ConfigOption<>(ArenaConfig.TIME_RESULTS_ROUND, true))
+                    .put(ArenaConfig.ROUND_TIME, new ConfigOption<>(ArenaConfig.ROUND_TIME, 300))
+                    .build()
+    );
+    
+    private Set<String> saveQueue = new HashSet<>();
+
+    public Arena(int id, YamlFileManager file) {
+        this.id = id;
+        this.file = file;
+        load();
     }
 
     public int getId() {
-        return Integer.parseInt(config.getName());
+        return id;
+    }
+
+    private void load() {
+        ConfigurationSection config = file.getConfig();
+        for (ConfigOption opt : configOptions.values()) {
+            opt.load(config);
+        }
+    }
+
+    public void save() {
+        ConfigurationSection config = file.getConfig();
+        for (String name : saveQueue) {
+            configOptions.get(name).save(config);
+        }
+        saveQueue.clear();
+        file.saveFile();
     }
 
     public String getNickname() {
-        return config.getString("nickname", null);
+        String nick = ((ConfigOption<String>) configOptions.get(ArenaConfig.NICKNAME.toString())).getValue();
+        return nick != null ? nick : "Arena " + id;
     }
 
-    public boolean setNickname(String newName) {
-        if (newName == null) {
-            return false;
-        } else {
-            config.set("nickname", newName);
-            return true;
-        }
-    }
-
-    public GameInstance getGameInstance() {
-        return gameInstance;
-    }
-
-    public int getMaxPlayers() {
-        return config.getInt("maxPlayers", 7);
-    }
-
-    public boolean setMaxPlayers(int newValue) {
-        if (newValue >= 3 && newValue % 2 != 0) {
-            config.set("maxPlayers", newValue);
-            return true;
-        } else {
+    public boolean setNickname(String name) {
+        if (name.equals(getNickname())) {
             return false;
         }
-    }
 
-    public int getRoundTime() {
-        return config.getInt("roundTime", 300);
-    }
+        if (name.equals("")) {
+            name = null;
+        }
 
-    public void setRoundTime(int newValue) {
-        config.set("roundTime", newValue);
+        ((ConfigOption<String>) configOptions.get(ArenaConfig.NICKNAME.toString())).setValue(name);
+        saveQueue.add(ArenaConfig.NICKNAME.toString());
+        return true;
     }
 
     public boolean isEnabled() {
-        return config.getBoolean("enabled", false);
+        return ((ConfigOption<Boolean>) configOptions.get(ArenaConfig.ENABLED.toString())).getValue();
     }
 
-    public boolean setEnabled(boolean newValue) {
-        if (isEnabled() != newValue) {
-            if (newValue && !checkConfiguration()) {
-                throw new InvalidArenaException();
-            } else if (!newValue) {
-                if (gameInstance.getPlayerCount() > 0) {
-                    throw new PlayersInArenaException();
-                }
-            }
-            config.set("enabled", newValue);
-            gameInstance.setState(newValue ? GameState.WAITING : GameState.INACTIVE);
-            return true;
+    public boolean setEnabled(boolean enabled) {
+        if (enabled == isEnabled()) {
+            return false;
         }
-        return false;
+
+        ((ConfigOption<Boolean>) configOptions.get(ArenaConfig.ENABLED.toString())).setValue(enabled);
+        saveQueue.add(ArenaConfig.ENABLED.toString());
+        return true;
     }
 
-    public boolean checkConfiguration() {
-        int maxPlayers = getMaxPlayers();
-        return getRoundTime() > 0 && maxPlayers >= 3 && maxPlayers % 2 != 0;
+    public int getMaxPlayers() {
+        return ((ConfigOption<Integer>) configOptions.get(ArenaConfig.MAX_PLAYERS.toString())).getValue();
+    }
+
+    public boolean setMaxPlayers(int maxPlayers) {
+        if (maxPlayers == getMaxPlayers()) {
+            return false;
+        }
+
+        ((ConfigOption<Integer>) configOptions.get(ArenaConfig.MAX_PLAYERS.toString())).setValue(maxPlayers);
+        saveQueue.add(ArenaConfig.MAX_PLAYERS.toString());
+        return true;
+    }
+
+    public int getRoomType() {
+        return ((ConfigOption<Integer>) configOptions.get(ArenaConfig.ROOM_TYPE.toString())).getValue();
+    }
+
+    public boolean setRoomType(int roomTypeId) {
+        if (roomTypeId == getRoomType()) {
+            return false;
+        }
+
+        ((ConfigOption<Integer>) configOptions.get(ArenaConfig.ROOM_TYPE.toString())).setValue(roomTypeId);
+        saveQueue.add(ArenaConfig.ROOM_TYPE.toString());
+        return true;
+    }
+
+    public int getRoomSpacing() {
+        return ((ConfigOption<Integer>) configOptions.get(ArenaConfig.ROOM_SPACING.toString())).getValue();
+    }
+
+    public boolean setRoomSpacing(int roomSpacing) {
+        if (roomSpacing == getRoomSpacing()) {
+            return false;
+        }
+
+        ((ConfigOption<Integer>) configOptions.get(ArenaConfig.ROOM_SPACING.toString())).setValue(roomSpacing);
+        saveQueue.add(ArenaConfig.ROOM_SPACING.toString());
+        return true;
     }
 
     public boolean isChatEnabled() {
-        return config.getBoolean("chatEnabled", true);
+        return ((ConfigOption<Boolean>) configOptions.get(ArenaConfig.CHAT_ENABLED.toString())).getValue();
     }
 
-    public void setChatEnabled(boolean newValue) {
-        if (isChatEnabled() != newValue) {
-            config.set("chatEnabled", newValue);
+    public boolean setChatEnabled(boolean enabled) {
+        if (enabled == isChatEnabled()) {
+            return false;
         }
+
+        ((ConfigOption<Boolean>) configOptions.get(ArenaConfig.CHAT_ENABLED.toString())).setValue(enabled);
+        saveQueue.add(ArenaConfig.CHAT_ENABLED.toString());
+        return true;
     }
 
     public boolean timeResultsRound() {
-        return config.getBoolean("timeResultsRound", true);
+        return ((ConfigOption<Boolean>) configOptions.get(ArenaConfig.TIME_RESULTS_ROUND.toString())).getValue();
     }
 
-    public boolean setTimeResultsRound(boolean newValue) {
-        if (timeResultsRound() != newValue) {
-            config.set("timeResultsRound", newValue);
-            return true;
+    public boolean setTimeResultsRound(boolean enabled) {
+        if (enabled == timeResultsRound()) {
+            return false;
         }
-        return false;
+
+        ((ConfigOption<Boolean>) configOptions.get(ArenaConfig.TIME_RESULTS_ROUND.toString())).setValue(enabled);
+        saveQueue.add(ArenaConfig.TIME_RESULTS_ROUND.toString());
+        return true;
     }
 
-    public void updateSigns() {
-        try {
-            TheBuildingGame.getInstance().getGameBackend().getSignManager().updateSigns(this);
-        } catch (NullPointerException ex) {}
+    public int getRoundTime() {
+        return ((ConfigOption<Integer>) configOptions.get(ArenaConfig.ROUND_TIME.toString())).getValue();
+    }
+
+    public boolean setRoundTime(int roundTime) {
+        if (roundTime == getRoundTime()) {
+            return false;
+        }
+
+        ((ConfigOption<Integer>) configOptions.get(ArenaConfig.ROUND_TIME.toString())).setValue(roundTime);
+        saveQueue.add(ArenaConfig.ROUND_TIME.toString());
+        return true;
     }
 
 }
