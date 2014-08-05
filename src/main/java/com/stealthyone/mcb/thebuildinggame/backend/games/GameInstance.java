@@ -179,6 +179,9 @@ public class GameInstance {
 
     public boolean addPlayer(BgPlayer player) {
         if (!player.isInGame() && !isPlayerJoined(player)) {
+            if (state != GameState.WAITING || getPlayerCount() >= arena.getMaxPlayers()) {	    
+		        return false;
+		    }
             players.put(player.getName().toLowerCase(), player);
             arena.updateSigns();
 
