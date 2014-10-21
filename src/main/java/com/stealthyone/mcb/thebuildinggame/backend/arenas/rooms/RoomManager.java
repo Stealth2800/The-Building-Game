@@ -88,6 +88,7 @@ public class RoomManager {
         region.setFlag(DefaultFlag.PISTONS, State.DENY);
         region.setFlag(DefaultFlag.ITEM_DROP, State.DENY);
         region.setFlag(DefaultFlag.EXP_DROPS, State.DENY);
+        region.setPriority(-1);
     }
 
     public World getRoomWorld() {

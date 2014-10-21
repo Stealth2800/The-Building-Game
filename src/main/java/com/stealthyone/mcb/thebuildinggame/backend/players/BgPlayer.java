@@ -29,6 +29,8 @@ public class BgPlayer {
     private String playerName;
 
     private GameInstance currentGame;
+    
+    private static int OfflinePlayerNum = 0; 
 
     public BgPlayer(Player player) {
         this.playerName = player.getName();
@@ -68,4 +70,11 @@ public class BgPlayer {
         return currentGame != null;
     }
 
+    public void SetOfflinePlayerNum(int v) {
+    	OfflinePlayerNum = v;
+    }    
+    
+    public int GetOfflinePlayerNum() {
+    	return OfflinePlayerNum;
+    }
 }

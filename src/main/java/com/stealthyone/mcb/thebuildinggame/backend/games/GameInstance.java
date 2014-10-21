@@ -52,6 +52,7 @@ public class GameInstance {
     private Map<Integer, BgPlayer> playerIds = new HashMap<Integer, BgPlayer>();
 
     private int roundTime = -2, currentRound = -1;
+    private int endTime = -2;    
     private Map<Integer, Round> rounds = new HashMap<Integer, Round>();
     private Map<Round, List<Room>> rooms = new HashMap<Round, List<Room>>();
 
@@ -81,15 +82,18 @@ public class GameInstance {
     }
 
     public void setupScoreboard() {
-        if (state == GameState.STARTING) {
-            for (BgPlayer player : players.values()) {
-                Player rawPlayer = player.getPlayer();
-                Score score = objective.getScore(rawPlayer);
-                score.setScore(0);
-            }
-            for (BgPlayer player : players.values()) {
-                player.getPlayer().setScoreboard(scoreboard);
-            }
+        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        objective = scoreboard.registerNewObjective("game", "dummy");
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        objective.setDisplayName("" + ChatColor.GOLD + ChatColor.BOLD + "The Building Game");
+        time = objective.getScore(Bukkit.getOfflinePlayer(ChatColor.GREEN + "Time"));
+        for (BgPlayer player : players.values()) {
+            Player rawPlayer = player.getPlayer();
+            Score score = objective.getScore(rawPlayer);
+            score.setScore(0);
+        }
+        for (BgPlayer player : players.values()) {
+            player.getPlayer().setScoreboard(scoreboard);
         }
     }
 
@@ -110,7 +114,7 @@ public class GameInstance {
     public void gameTick() {
         if (state != GameState.INACTIVE) {
             if (roundTime >= 0) {
-                if (state == GameState.IN_PROGRESS) {
+                if (state == GameState.IN_PROGRESS || state == GameState.FREEZING) {
                     Round curRound = getCurrentRound();
                     if (!(curRound instanceof RoundBuild) || (curRound instanceof RoundResults && !arena.timeResultsRound())) roundTime++;
                 }
@@ -121,9 +125,9 @@ public class GameInstance {
             if (state == GameState.WAITING) {
                 if (getPlayerCount() == arena.getMaxPlayers()) {
                     //start game
-                    if (roundTime == -2) roundTime = 15;
-
-                    if (roundTime == 30 || roundTime == 15 || roundTime >= 0 && roundTime <= 10)
+                	if (roundTime == -2) roundTime = 10;
+                	  
+                    if (roundTime == 30 || roundTime == 15 || roundTime == 10 || roundTime > 0 && roundTime <= 5)
                         sendMessage(NoticeMessage.GAME_TIME_START_NOTICE, TimeUtils.translateSeconds(roundTime));
 
                     if (roundTime == -1)
@@ -132,7 +136,7 @@ public class GameInstance {
                     roundTime = -2;
                     sendMessage(NoticeMessage.GAME_STARTING_CANCELLED, "Player quit");
                 }
-            } else if (state == GameState.IN_PROGRESS) {
+            } else if (state == GameState.IN_PROGRESS || state == GameState.FREEZING) {
                 Round currentRound = getCurrentRound();
                 if (currentRound instanceof RoundGuess || currentRound instanceof RoundThink) {
                     if ((currentRound instanceof RoundGuess && ((RoundGuess) currentRound).hasEveryoneGuessed()) || (currentRound instanceof RoundThink && ((RoundThink) currentRound).hasEveryoneEnteredIdea()))
@@ -142,11 +146,33 @@ public class GameInstance {
                         endCurrentRound();
 
                     int maxRoundTime = arena.getRoundTime();
-                    if (roundTime == maxRoundTime / 2 || roundTime == 30 || roundTime == 15 || roundTime >= 0 && roundTime <= 10)
+                    if (roundTime == maxRoundTime / 2 || roundTime == 30 || roundTime == 15 || roundTime > 0 && roundTime <= 5)
                         sendMessage(NoticeMessage.GAME_TIME_NOTICE, TimeUtils.translateSeconds(roundTime));
 
                     if (roundTime == -1) endCurrentRound();
                 }
+            } 
+            if (state == GameState.FREEZING) {
+            	if(endTime >= 0)
+            		endTime --;
+            	
+               	if(endTime == -2) endTime = 150;
+               	
+            	if (endTime == 90 || endTime == 80 || endTime == 70 ||endTime == 60 ||endTime == 50 || endTime == 40 || endTime == 30 || endTime == 20 || endTime > 0 && endTime <= 15)
+            		sendMessage(NoticeMessage.GAME_TIME_END_NOTICE, TimeUtils.translateSeconds(endTime));
+            	
+                if(endTime == -1) {
+                	setState(GameState.IN_PROGRESS);
+                    for (BgPlayer player : players.values()) {
+                    	if (player.isOnline())
+                    	{
+                        	player.setCurrentGame(null);
+                    	}
+                    }
+                    sendMessage(NoticeMessage.GAME_ENDED_PLAYER_QUIT);
+                    endTime = -2;
+                    endGame();
+                }    	
             }
         }
     }
@@ -179,6 +205,9 @@ public class GameInstance {
 
     public boolean addPlayer(BgPlayer player) {
         if (!player.isInGame() && !isPlayerJoined(player)) {
+		    if (state != GameState.WAITING || getPlayerCount() >= arena.getMaxPlayers()) {	    
+		        return false;
+		    }
             players.put(player.getName().toLowerCase(), player);
             arena.updateSigns();
 
@@ -202,6 +231,7 @@ public class GameInstance {
             playerManager.loadPlayerData(player);
             player.setCurrentGame(null);
             if (state == GameState.IN_PROGRESS) {
+            	player.setCurrentGame(null);
                 sendMessage(NoticeMessage.GAME_ENDED_PLAYER_QUIT);
                 endGame();
             }
@@ -300,10 +330,13 @@ public class GameInstance {
     private void clearPlayers() {
         PlayerManager playerManager = TheBuildingGame.getInstance().getGameBackend().getPlayerManager();
         for (BgPlayer player : players.values()) {
-            Log.debug("Clear player: " + player.getName());
-            player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
-            player.setCurrentGame(null);
-            playerManager.loadPlayerData(player);
+        	if (player.isOnline()) {
+	            Log.debug("Clear player: " + player.getName());
+	            player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+	            player.setCurrentGame(null);
+	            playerManager.loadPlayerData(player);
+	            player.SetOfflinePlayerNum(0);
+        	}
         }
         players.clear();
         playerIds.clear();
@@ -358,13 +391,15 @@ public class GameInstance {
 
     public void sendMessage(NoticeMessage message) {
         for (BgPlayer player : players.values()) {
-            message.sendTo(player.getPlayer());
+        	if(player.isOnline())
+        		message.sendTo(player.getPlayer());
         }
     }
 
     public void sendMessage(NoticeMessage message, String... replacements) {
         for (BgPlayer player : players.values()) {
-            message.sendTo(player.getPlayer(), replacements);
+        	if(player.isOnline())
+        		message.sendTo(player.getPlayer(), replacements);
         }
     }
 

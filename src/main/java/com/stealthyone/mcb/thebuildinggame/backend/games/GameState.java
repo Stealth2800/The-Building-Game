@@ -26,6 +26,7 @@ public enum GameState {
     WAITING(ChatColor.GREEN), //Waiting for players
     STARTING(ChatColor.YELLOW), //Game starting, players can't join
     IN_PROGRESS(ChatColor.RED), //Game in progress, players can't join
+    FREEZING(ChatColor.BLUE), //Game in pause, some players leave and can't join
     ENDING(ChatColor.GOLD); //Finishing up, kicking players, cleanup, etc.
 
     private String text;

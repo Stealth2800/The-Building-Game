@@ -19,9 +19,15 @@
 package com.stealthyone.mcb.thebuildinggame.listeners;
 
 import com.stealthyone.mcb.thebuildinggame.TheBuildingGame;
+import com.stealthyone.mcb.thebuildinggame.TheBuildingGame.Log;
+import com.stealthyone.mcb.thebuildinggame.backend.games.GameState;
 import com.stealthyone.mcb.thebuildinggame.backend.players.BgPlayer;
 import com.stealthyone.mcb.thebuildinggame.backend.players.PlayerManager;
+import com.stealthyone.mcb.thebuildinggame.messages.NoticeMessage;
+
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -39,18 +45,28 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
-        BgPlayer playerCast = plugin.getGameBackend().getPlayerManager().castPlayer(e.getPlayer());
-        try {
-            playerCast.getCurrentGame().removePlayer(playerCast);
-        } catch (NullPointerException ex) {}
+    	BgPlayer playerCast = plugin.getGameBackend().getPlayerManager().castPlayer(e.getPlayer());
+    	if(playerCast.isInGame()) {
+    		if (playerCast.getCurrentGame().getState() != GameState.WAITING) {
+		        playerCast.SetOfflinePlayerNum(playerCast.GetOfflinePlayerNum()+1);
+		        playerCast.getCurrentGame().setState(GameState.FREEZING);
+    		} else {
+    			playerCast.getCurrentGame().removePlayer(playerCast);
+    		}
+    	}
     }
 
     @EventHandler
     public void onPlayerKick(PlayerKickEvent e) {
-        BgPlayer playerCast = plugin.getGameBackend().getPlayerManager().castPlayer(e.getPlayer());
-        try {
-            playerCast.getCurrentGame().removePlayer(playerCast);
-        } catch (NullPointerException ex) {}
+    	BgPlayer playerCast = plugin.getGameBackend().getPlayerManager().castPlayer(e.getPlayer());
+    	if(playerCast.isInGame()) {
+    		if (playerCast.getCurrentGame().getState() != GameState.WAITING) {
+		        playerCast.SetOfflinePlayerNum(playerCast.GetOfflinePlayerNum()+1);
+		        playerCast.getCurrentGame().setState(GameState.FREEZING);
+    		} else {
+    			playerCast.getCurrentGame().removePlayer(playerCast);
+    		}
+    	}
     }
 
     @EventHandler
@@ -60,6 +76,25 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
+    	BgPlayer playerCast = plugin.getGameBackend().getPlayerManager().castPlayer(e.getPlayer());
+    	Log.debug("Offline player(s)："+Integer.toString(playerCast.GetOfflinePlayerNum()));
+    	if(playerCast.isInGame()){
+    		if(playerCast.getCurrentGame().getState() == GameState.FREEZING)
+    		{
+    			playerCast.SetOfflinePlayerNum(playerCast.GetOfflinePlayerNum()-1);
+				playerCast.getCurrentGame().setupScoreboard();
+    			if(playerCast.GetOfflinePlayerNum() == 0)
+    			{
+    				playerCast.getCurrentGame().setState(GameState.IN_PROGRESS);
+    				playerCast.getCurrentGame().sendMessage(NoticeMessage.RE_JOINED_GAME);
+    				e.getPlayer().setGameMode(org.bukkit.GameMode.CREATIVE);
+    			}
+    			return;
+    		} else if (playerCast.getCurrentGame().getState() == GameState.WAITING) {
+    			playerCast.setCurrentGame(null);
+    		}
+    	} 
+    	
         Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
             @Override
             public void run() {
