@@ -27,12 +27,12 @@
     <distributionManagement>
         <repository>
             <id>stealthyone-releases</id>
-            <url>http://repo.stealthyone.com/content/repositories/releases/</url>
+            <url>http://repo.stealthyone.com/content/groups/public/repositories/releases/</url>
         </repository>
 
         <snapshotRepository>
             <id>stealthyone-snapshots</id>
-            <url>http://repo.stealthyone.com/content/repositories/snapshots/</url>
+            <url>http://repo.stealthyone.com/content/groups/public/repositories/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -52,7 +52,9 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.7.9-R0.1-SNAPSHOT</version>
+            <version>1.7.9-R0.2-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/bukkit-1.7.9-R0.2.jar</systemPath>
         </dependency>
 
         <dependency>
