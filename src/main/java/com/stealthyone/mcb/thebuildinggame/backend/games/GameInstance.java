@@ -158,7 +158,7 @@ public class GameInstance {
             	
                	if(endTime == -2) endTime = 150;
                	
-            	if (endTime == 150 && endTime == 90 || endTime == 80 || endTime == 70 ||endTime == 60 ||endTime == 50 || endTime == 40 || endTime == 30 || endTime == 20 || endTime > 0 && endTime <= 15)
+            	if (endTime == 150 || endTime == 90 || endTime == 80 || endTime == 70 ||endTime == 60 ||endTime == 50 || endTime == 40 || endTime == 30 || endTime == 20 || endTime > 0 && endTime <= 15)
             		sendMessage(NoticeMessage.GAME_TIME_END_NOTICE, TimeUtils.translateSeconds(endTime));
             	
                 if(endTime == -1) {
