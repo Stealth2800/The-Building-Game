@@ -165,9 +165,7 @@ public class GameInstance {
                 	setState(GameState.IN_PROGRESS);
                     for (BgPlayer player : players.values()) {
                     	if (player.isOnline())
-                    	{
                         	player.setCurrentGame(null);
-                    	}
                     }
                     sendMessage(NoticeMessage.GAME_ENDED_PLAYER_QUIT);
                     endTime = -2;

@@ -79,12 +79,10 @@ public class PlayerListener implements Listener {
     	BgPlayer playerCast = plugin.getGameBackend().getPlayerManager().castPlayer(e.getPlayer());
     	Log.debug("Offline player(s)："+Integer.toString(playerCast.GetOfflinePlayerNum()));
     	if(playerCast.isInGame()){
-    		if(playerCast.getCurrentGame().getState() == GameState.FREEZING)
-    		{
+    		if(playerCast.getCurrentGame().getState() == GameState.FREEZING) {
     			playerCast.SetOfflinePlayerNum(playerCast.GetOfflinePlayerNum()-1);
 				playerCast.getCurrentGame().setupScoreboard();
-    			if(playerCast.GetOfflinePlayerNum() == 0)
-    			{
+    			if(playerCast.GetOfflinePlayerNum() == 0) {
     				playerCast.getCurrentGame().setState(GameState.IN_PROGRESS);
     				playerCast.getCurrentGame().sendMessage(NoticeMessage.RE_JOINED_GAME);
     				e.getPlayer().setGameMode(org.bukkit.GameMode.CREATIVE);
